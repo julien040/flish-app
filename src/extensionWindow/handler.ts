@@ -4,7 +4,7 @@
  * Created Date: Thursday December 9th 2021
  * Author: Julien Cagniart
  * -----
- * Last Modified: 09/12/2021 11:31
+ * Last Modified: 09/12/2021 11:39
  * Modified By: Julien Cagniart
  * -----
  * Copyright (c) 2021 Julien - juliencagniart40@gmail.com
@@ -22,9 +22,7 @@
 
 import { shell } from "electron";
 
-
-
 export const windowOpenHandle = ({ url }: { url: string }) => {
-    shell.openExternal(url);
-    return {action:'deny'}
+  shell.openExternal(url);
+  return { action: "deny" };
 };
