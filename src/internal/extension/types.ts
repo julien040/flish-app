@@ -4,7 +4,7 @@
  * Created Date: Sunday December 5th 2021
  * Author: Julien Cagniart
  * -----
- * Last Modified: 08/12/2021 16:57
+ * Last Modified: 12/12/2021 18:34
  * Modified By: Julien Cagniart
  * -----
  * Copyright (c) 2021 Julien - juliencagniart40@gmail.com
@@ -27,7 +27,7 @@ export interface envVariables {
   type?: "number" | "string" | "boolean";
   /** If required, user can't skip the input. Label will have a small red star */
   required?: boolean;
- /** What would be shown below the input */
+  /** What would be shown below the input */
   description?: string;
   /** A default value to fallback if no input. If not specified in boolean, fallback to false */
   defaultValue?: any;
@@ -48,12 +48,18 @@ export interface extension {
   downloadURL: string;
   /** The version of the extension */
   version: string;
+  /** Hash over extension files  */
+  hash: string;
   /** The author of the extension */
   author?: string;
   /** The url of the extension */
   link: string;
   /** Absolute path to the extension */
   path: string;
+  /** If the extension should be invisible (in headless mode) */
+  invisible?: boolean;
+  /** The mode of the app | search => app is shown but search bar is still shown, normal => on enter pressed, focus is given to extension and search bar disappear, noArgument => when extension, no argument could be given */
+  mode?: "search" | "normal" | "noArgument";
   /** The HTML file to load in the window */
   entry?: string;
   /** The icon of the extension */
@@ -61,7 +67,15 @@ export interface extension {
   /** An app could have multiple functionnalities. These are suggestion offered by the interface (e.g /notion search => If you want search to be recommend, put it in the array)  */
   textSuggestion?: string[];
   /** Permissions required by the extension. Specify the capabilities of the extension (could be empty)  */
-  permissions: string[];
+  permissions: (
+    | "notifications"
+    | "clipboard"
+    | "geolocation"
+    | "media"
+    | "fs"
+  )[];
   /** Array of environment Variable required by the extension. User will be prompt answering them (could be empty) */
-  secrets: envVariables[];
+  envVariables: envVariables[];
+  /** If the extension is premium */
+  premium?: boolean;
 }

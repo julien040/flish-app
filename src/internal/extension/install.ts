@@ -4,7 +4,7 @@
  * Created Date: Sunday December 5th 2021
  * Author: Julien Cagniart
  * -----
- * Last Modified: 09/12/2021 10:04
+ * Last Modified: 09/12/2021 13:29
  * Modified By: Julien Cagniart
  * -----
  * Copyright (c) 2021 Julien - juliencagniart40@gmail.com
@@ -53,7 +53,7 @@ export const installExtension = async (
   callback("Waiting API");
   const { data } = await axios.get<extension>(urlManifest);
   callback("Manifest Fetched");
-  const userPath = app.getPath("appData");  //Return the folder where the data for the application is stored. It's an electron feature
+  const userPath = app.getPath("userData");  //Return the folder where the data for the application is stored. It's an electron feature
   var folderToExtract: string; //In case no path has been given, we will use the default one (userPath/extensions/{uuid})
   if (!path) {
     folderToExtract = join(userPath, "extensions", uuid);

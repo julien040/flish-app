@@ -1,7 +1,32 @@
-import { app, BrowserWindow } from "electron";
-import * as path from "path";
+/*
+ * File: \src\main.ts
+ * Project: flish-app
+ * Created Date: Sunday December 5th 2021
+ * Author: Julien Cagniart
+ * -----
+ * Last Modified: 12/12/2021 19:02
+ * Modified By: Julien Cagniart
+ * -----
+ * Copyright (c) 2021 Julien - juliencagniart40@gmail.com
+ * -----
+ * _______ _ _      _                 _             
+(_______) (_)    | |               | |            
+ _____  | |_  ___| | _           _ | | ____ _   _ 
+|  ___) | | |/___) || \         / || |/ _  ) | | |
+| |     | | |___ | | | |   _   ( (_| ( (/ / \ V / 
+|_|     |_|_(___/|_| |_|  (_)   \____|\____) \_/  
+                                                   
+ * Purpose of this file : 
+ *  Link to documentation associated with this file : (empty) 
+ */
 
-function createWindow() {
+import { app, BrowserView, BrowserWindow, ipcMain } from "electron";
+import * as path from "path";
+import { InstanceWindow } from "./extensionWindow/instanceWIndow";
+import { createInstance } from "./internal/instance/create";
+import config from "./config"
+
+async function createWindow() {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     height: 600,
@@ -10,20 +35,20 @@ function createWindow() {
     },
     width: 800,
   });
-
-  // and load the index.html of the app.
   mainWindow.loadFile(path.join(__dirname, "../index.html"));
-
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  instanceWindow = new InstanceWindow();
+  await instanceWindow.loadInstance("7t_AlP0TRx9niCsFj0cTx");
+  
 }
-
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.on("ready", () => {
+var instanceWindow: InstanceWindow;
+app.on("ready", async () => {
   createWindow();
+  
 
+  ipcMain.on("logApiCall", (event, arg) => {
+    console.log(arg);
+    instanceWindow.addAction("fs", arg[0]);
+  });
   app.on("activate", function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.

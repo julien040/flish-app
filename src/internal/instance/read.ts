@@ -4,7 +4,7 @@
  * Created Date: Wednesday December 8th 2021
  * Author: Julien Cagniart
  * -----
- * Last Modified: 08/12/2021 18:38
+ * Last Modified: 11/12/2021 18:05
  * Modified By: Julien Cagniart
  * -----
  * Copyright (c) 2021 Julien - juliencagniart40@gmail.com
@@ -46,8 +46,8 @@ type dictionnary = {
 export const getEnvVariableOfInstance = async (instanceID: string) => {
   const { extension } = await getInstance(instanceID);
   var envVariable = {} as dictionnary;
-  for (let index = 0; index < extension.secrets.length; index++) {
-    const element = extension.secrets[index];
+  for (let index = 0; index < extension.envVariables.length; index++) {
+    const element = extension.envVariables[index];
     if (element.shouldBeEncrypted) {
       envVariable[`${element.name}`] = await getPassword(
         config.secureStoreAppName,
@@ -59,14 +59,14 @@ export const getEnvVariableOfInstance = async (instanceID: string) => {
       );
     }
   }
+  return envVariable;
 };
+
 
 export const getAllInstances = async () => {
   const data = await getConfig("instances");
   if (!data) {
     return [];
   }
-  console.log(data);
-  
-  return data
+  return data;
 };
