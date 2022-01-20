@@ -31,19 +31,27 @@ import {
   readdir as rd,
   showItemInFolder as sf,
 } from "./api/fs";
+import config from "../config";
 const extensionData: extension = JSON.parse(process.argv[14]);
 const instanceData: Instance = JSON.parse(process.argv[15]);
-import config from "../config";
+const query: string = JSON.parse(process.argv[16]);
+
+let envVariable: Object = null;
+
+getEnvVariableOfInstance(instanceData.instanceID).then(function (res) {
+  envVariable = res;
+});
 
 contextBridge.exposeInMainWorld("flish", {
   /** This returns informations about the extension */
   extension: extensionData,
   /** This returns informations about the instance */
   instance: instanceData,
-  /** This returns the environment variable of the instance */
-  getEnvVariable: async (): Promise<any> => {
-    return await getEnvVariableOfInstance(instanceData.instanceID);
-  },
+  /** This returns the query */
+  query: query,
+  /** This returns the environment variable specified by the user */
+  envVariable: envVariable,
+  /** A set of APIs to interact with flish */
   application: {
     openProfileSettings: () => {
       ipcRenderer.send("openInstanceSettings", instanceData.instanceID);
@@ -54,9 +62,7 @@ contextBridge.exposeInMainWorld("flish", {
     closeApp: () => {
       ipcRenderer.send("closeInstance", instanceData.instanceID);
     },
-    getAppVersion: () => {
-      return config.appVersion;
-    },
+    getAppVersion: config.appVersion,
     getAuthToken: () => {
       ipcRenderer.send("getAuthToken", instanceData.instanceID);
     },
@@ -78,11 +84,23 @@ contextBridge.exposeInMainWorld("flish", {
     },
   },
   fs: {
-    readFile: (path: string, encoding?: string) => {return rf(extensionData, path, encoding)},
-    readdir: (path: string) => {return rd(extensionData, path)},
-    appendFile: (path: string, data: string) => {return af(extensionData, path, data)},
-    mkdir: (path: string) => {return mk(extensionData, path)},
-    openFolder: (path: string) => {return of(extensionData, path)},
-    showItemInFolder: (path: string) => {sf(extensionData, path)}, //Not working
+    readFile: (path: string, encoding?: string) => {
+      return rf(extensionData, path, encoding);
+    },
+    readDir: (path: string) => {
+      return rd(extensionData, path);
+    },
+    appendFile: (path: string, data: string) => {
+      return af(extensionData, path, data);
+    },
+    mkDir: (path: string) => {
+      return mk(extensionData, path);
+    },
+    openPath: (path: string) => {
+      return of(extensionData, path);
+    },
+    showItemInFolder: (path: string) => {
+      sf(extensionData, path);
+    }, //Not working
   },
 });

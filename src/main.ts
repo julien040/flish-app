@@ -1,69 +1,130 @@
-/*
- * File: \src\main.ts
- * Project: flish-app
- * Created Date: Sunday December 5th 2021
- * Author: Julien Cagniart
- * -----
- * Last Modified: 12/12/2021 19:02
- * Modified By: Julien Cagniart
- * -----
- * Copyright (c) 2021 Julien - juliencagniart40@gmail.com
- * -----
- * _______ _ _      _                 _             
-(_______) (_)    | |               | |            
- _____  | |_  ___| | _           _ | | ____ _   _ 
-|  ___) | | |/___) || \         / || |/ _  ) | | |
-| |     | | |___ | | | |   _   ( (_| ( (/ / \ V / 
-|_|     |_|_(___/|_| |_|  (_)   \____|\____) \_/  
-                                                   
- * Purpose of this file : 
- *  Link to documentation associated with this file : (empty) 
- */
-
-import { app, BrowserView, BrowserWindow, ipcMain } from "electron";
-import * as path from "path";
+import { app, Tray, ipcMain, Menu, globalShortcut } from "electron";
 import { InstanceWindow } from "./extensionWindow/instanceWIndow";
-import { createInstance } from "./internal/instance/create";
-import config from "./config"
+import { searchWindow } from "./searchWindow/window";
+import { ConfigurationWindow } from "./configurationWindow/window";
+import DevModeWindow from "./devModeWindow/devWindow";
+import { getConfig } from "./internal/store";
+import { join } from "path";
 
-async function createWindow() {
-  // Create the browser window.
-  const mainWindow = new BrowserWindow({
-    height: 600,
-    webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
-    },
-    width: 800,
-  });
-  mainWindow.loadFile(path.join(__dirname, "../index.html"));
-  instanceWindow = new InstanceWindow();
-  await instanceWindow.loadInstance("7t_AlP0TRx9niCsFj0cTx");
-  
-}
-var instanceWindow: InstanceWindow;
+let configurationWindow: ConfigurationWindow;
+let search: searchWindow;
+const instanceWindow = new InstanceWindow();
+const devModeWindow = new DevModeWindow();
+let tray: Tray;
+
+/* 
+Avoid CORS issues when a POST Request is made using a JSON payload.
+When sending a post JSON, chrome will first send a preflight request to the server to check if the request is allowed.
+However, we can't control header in this preflight request.
+So we need to tell chrome to desactivate.
+Similar as : https://github.com/electron/electron/issues/20730
+*/
+app.commandLine.appendSwitch("disable-features", "OutOfBlinkCors");
+
 app.on("ready", async () => {
-  createWindow();
-  
-
-  ipcMain.on("logApiCall", (event, arg) => {
-    console.log(arg);
-    instanceWindow.addAction("fs", arg[0]);
+  configurationWindow = new ConfigurationWindow();
+  search = new searchWindow();
+  ipcMain.on("showSearch", () => search.show());
+  ipcMain.on("hideSearch", () => search.hide());
+  ipcMain.on("openSettings", () => configurationWindow.show());
+  ipcMain.on("closeSettings", () => configurationWindow.hide());
+  ipcMain.on("launchInstance", (e, id: string, text: string) => {
+    instanceWindow.setQueryString(text);
+    instanceWindow.loadInstance(id);
   });
-  app.on("activate", function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
-  });
+  tray = new Tray(join(__dirname, "64x64.png"));
+  const shortcut = await getConfig("shortcut");
+  const menu = Menu.buildFromTemplate([
+    {
+      label: "Search bar",
+      type: "normal",
+      sublabel: "Open the spotlight like search bar",
+      click: () => search.show(),
+      accelerator: shortcut || "ALT+P",
+    },
+    {
+      label: "Settings",
+      sublabel: "Install or remove extensions",
+      type: "normal",
+      click: () => configurationWindow.show(),
+    },
+    {
+      type: "separator",
+    },
+    {
+      label: "Reload current extension",
+      type: "normal",
+      click: () => instanceWindow.reload(),
+    },
+    {
+      label: "Open dev tools",
+      type: "normal",
+      click: () => instanceWindow.openDevTools(),
+    },
+    {
+      type: "separator",
+    },
+    {
+      label: "Developer mode",
+      submenu: [
+        {
+          label: "Open development instance",
+          type: "normal",
+          sublabel: "Check docs to learn more",
+          click: () => devModeWindow.create(),
+        },
+        {
+          type: "separator",
+        },
+        {
+          label: "Refresh page",
+          type: "normal",
+          sublabel: "Like F5",
+          click: () => devModeWindow.refresh(),
+          accelerator: process.platform === "darwin" ? "Cmd+R" : "CTRL+R", //Mac use Cmd and not Ctrl
+        },
+        {
+          label: "Restart instance",
+          type: "normal",
+          sublabel: "Useful on crash",
+          click: () => {
+            devModeWindow.create();
+          },
+        },
+        {
+          type: "separator",
+        },
+        {
+          label: "Open dev tools in new window",
+          type: "normal",
+          click: () => devModeWindow.openDevTools(),
+          accelerator:
+            process.platform === "darwin" ? "Cmd+Maj+I" : "CTRL+Maj+I", //Mac use Cmd and not Ctrl
+        },
+        /* {
+          type: "separator",
+        },
+        {
+          label: "Close development instance",
+          type: "normal",
+          sublabel: "Close the development instance",
+          click: () => devModeWindow.destroy(),
+        }, */
+      ],
+    },
+    {
+      type: "separator",
+    },
+    {
+      label: "Quit",
+      type: "normal",
+      click: () => {
+        tray = null;
+        app.exit();
+      },
+    },
+  ]);
+  tray.setToolTip("Open search bar or settings");
+  tray.setContextMenu(menu);
+  globalShortcut.register(shortcut || "ALT+P", () => search.show());
 });
-
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit();
-  }
-});
-
-// In this file you can include the rest of your app"s specific main process
-// code. You can also put them in separate files and require them here.

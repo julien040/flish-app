@@ -4,7 +4,7 @@
  * Created Date: Wednesday December 8th 2021
  * Author: Julien Cagniart
  * -----
- * Last Modified: 08/12/2021 17:53
+ * Last Modified: 18/12/2021 19:02
  * Modified By: Julien Cagniart
  * -----
  * Copyright (c) 2021 Julien - juliencagniart40@gmail.com
@@ -20,7 +20,7 @@
  *  Link to documentation associated with this file : (empty) 
  */
 import { envVariables } from "../extension/types"; // import type for environment variables
-import { Instance } from "./types"; //import type for the instance object
+import { Instance, updateEnvVariables } from "./types"; //import type for the instance object
 import { nanoid } from "nanoid"; // To generate a unique ID
 import { doesExtensionExist } from "../extension/utils/exists";
 import { setConfig } from "../store";
@@ -29,7 +29,7 @@ import keytar = require("keytar"); // To store the encrypted values
 
 export const createInstance = async (
   extensionID: string,
-  options: { name: string; keyboard?: string; envVariable?: envVariables[] }
+  options: { name: string; keyboard?: string; envVariable?: updateEnvVariables[] }
 ) => {
   let { name, keyboard, envVariable } = options;
   if (!keyboard) {
@@ -56,20 +56,22 @@ export const createInstance = async (
 };
 export async function saveEnvVariable(
   instanceID: string,
-  envVariable: envVariables[]
+  envVariable: updateEnvVariables[]
 ) {
   for (let index = 0; index < envVariable.length; index++) {
     // For each env variable
     const element = envVariable[index];
-    if (element.shouldBeEncrypted === true) {
+    element.value ??= ""; // If no value is set, set it to empty string
+    element.value = element.value.toString()
+    if (element.needToBeEncrypted === true) {
       //If it should be encrypted, we set it in the keychain
       await keytar.setPassword(
         config.secureStoreAppName,
         `${instanceID}-${element.name}`,
-        "empty"
+        element.value
       ); //Service name is defined in the config file. Key is the instanceID and the name of the env variable. We then set the value to an empty string
     } else {
-      await setConfig(`envVariable.${instanceID}.${element.name}`, "");
+      await setConfig(`envVariable.${instanceID}.${element.name}`, element.value);
     }
   }
 }

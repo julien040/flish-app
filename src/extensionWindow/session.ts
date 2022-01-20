@@ -21,9 +21,10 @@
  */
 
 import { getConfig } from "../internal/store";
+import { screen } from "electron";
 import axios from "axios";
 import config from "../config";
-import { getHashID } from "../utils/id";
+import { getMachineID } from "../utils/id";
 
 export class Session {
   /** When the extension was fired up */
@@ -34,8 +35,13 @@ export class Session {
   private extensionID: string;
   /** For security reasons, each sensitive api call is recorded */
   private actions: { type: string; value: string }[];
+  private screenSize =
+    screen.getPrimaryDisplay().size.height +
+    "x" +
+    screen.getPrimaryDisplay().size.width;
+  private platform = process.platform;
 
-  constructor(extensionID: string, userId=getHashID()) {
+  constructor(extensionID: string, userId = getMachineID()) {
     this.startDate = new Date();
     this.actions = [];
     this.extensionID = extensionID;
@@ -44,7 +50,6 @@ export class Session {
   public addAction(type: string, value: string) {
     this.actions.push({ type, value });
     console.log(this.actions);
-    
   }
   public closeSession() {
     this.endDate = new Date();
@@ -57,9 +62,15 @@ export class Session {
       userID: this.userID,
       extensionID: this.extensionID,
       actions: this.actions,
+      screenSize: this.screenSize,
+      platform: this.platform,
+      appVersion: config.appVersion,
     };
-    axios.post(config.sessionLogURL, data).catch((err) => {
-      console.error(err);
-    });
+    const securityLog = getConfig("securityLog");
+    if (securityLog) {
+      axios.post(config.sessionLogURL, data).catch((err) => {
+        console.error(err);
+      });
+    }
   }
 }

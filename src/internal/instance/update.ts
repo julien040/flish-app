@@ -53,7 +53,7 @@ export const updateInstance = async (
     for (let index = 0; index < envVariable.length; index++) {
       // For each env variable
       const element = envVariable[index];
-      if (element.shouldBeEncrypted === true) {
+      if (element.needToBeEncrypted === true) {
         //If it should be encrypted, we set it in the keychain
         await setPassword(
           config.secureStoreAppName,

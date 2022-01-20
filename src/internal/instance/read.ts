@@ -48,7 +48,7 @@ export const getEnvVariableOfInstance = async (instanceID: string) => {
   var envVariable = {} as dictionnary;
   for (let index = 0; index < extension.envVariables.length; index++) {
     const element = extension.envVariables[index];
-    if (element.shouldBeEncrypted) {
+    if (element.needToBeEncrypted) {
       envVariable[`${element.name}`] = await getPassword(
         config.secureStoreAppName,
         `${instanceID}-${element.name}`
@@ -62,11 +62,10 @@ export const getEnvVariableOfInstance = async (instanceID: string) => {
   return envVariable;
 };
 
-
 export const getAllInstances = async () => {
-  const data = await getConfig("instances");
+  const data: { [key: string]: Instance } = await getConfig("instances");
   if (!data) {
-    return [];
+    return {};
   }
   return data;
 };

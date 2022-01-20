@@ -4,7 +4,7 @@
  * Created Date: Wednesday December 8th 2021
  * Author: Julien Cagniart
  * -----
- * Last Modified: 12/12/2021 21:09
+ * Last Modified: 13/12/2021 16:50
  * Modified By: Julien Cagniart
  * -----
  * Copyright (c) 2021 Julien - juliencagniart40@gmail.com
@@ -38,6 +38,7 @@ export class InstanceWindow {
   private InstanceData: Instance;
   private ExtensionData: extension;
   private Session: Session;
+  private query = "";
 
   constructor(id?: string) {
     //This is the constructor. When the class is called, a new browser window is created. If the id is specified, the class will load data about the instance
@@ -52,6 +53,8 @@ export class InstanceWindow {
   }
   private recreateApp() {
     const screenSize = screen.getPrimaryDisplay().size;
+    console.log(this.query, "query");
+
     this.app = new BrowserWindow({
       webPreferences: {
         devTools: true,
@@ -59,15 +62,21 @@ export class InstanceWindow {
         additionalArguments: [
           JSON.stringify(this.ExtensionData),
           JSON.stringify(this.InstanceData),
+          JSON.stringify(this.query),
         ],
         partition: `persist:${this.InstanceData.instanceID}`,
       },
+      show: this.ExtensionData.mode === "headless" ? false : true,
+      autoHideMenuBar: true,
       width: 800,
       height: 600,
       x: screenSize.width / 2 - 400,
       y: screenSize.height / 2 - 120,
     }).on("close", () => this.Session.closeSession());
     this.Session = new Session(this.ExtensionData.uuid);
+    ipcMain.on("logApiCall", (event, arg) => {
+      this.addAction("fs", arg[0]);
+    });
   }
   // This method show the app
   show(): void {
@@ -87,11 +96,12 @@ export class InstanceWindow {
    * @param id The id of the instance to load
    */
   async loadInstance(id: string): Promise<void> {
-    if (this.InstanceData != undefined) { //Case application ask to load an instance while already being loaded
+    /* if (this.InstanceData != undefined) {
+      //Case application ask to load an instance while already being loaded
       if (this.InstanceData.instanceID == id) {
         return;
       }
-    }
+    } */
     const { extension, instance } = await getInstance(id);
     this.InstanceData = instance;
     this.ExtensionData = extension;
@@ -103,24 +113,31 @@ export class InstanceWindow {
     });
     //Handler is managed by a callback
     this.app.webContents.session.setPermissionRequestHandler(
-      (webContents, permissionRequest, callback) =>
+      (webContents, permissionRequest, callback) => {
+        this.Session.addAction("permissionRequest", permissionRequest);
         permissionRequestHandler(
           { webContents, permissionRequest, callback },
           instance.instanceID
-        )
+        );
+      }
     );
     //Argument is a function returning a boolean
     this.app.webContents.session.setPermissionCheckHandler(
       (webcontent, permission: any, requestingOrigin) => {
+        this.Session.addAction("permissionCheck", permission);
         return permissionCheckHandler(permission, extension);
       }
     );
     //Avoid CORS issues (Source)[https://pratikpc.medium.com/bypassing-cors-with-electron-ab7eaf331605]
     this.app.webContents.session.webRequest.onBeforeSendHeaders(
       (details, callback) => {
-        this.Session.addAction("WebRequest", details.url);
+        if (new URL(details.url).protocol !== "devtools:") {
+          //Devtools is always spamming the console
+          this.Session.addAction("WebRequest", details.url);
+        }
+
         callback({
-          requestHeaders: { Origin: "*", ...details.requestHeaders },
+          requestHeaders: { ...details.requestHeaders, Origin: "*" },
         });
       }
     );
@@ -128,15 +145,18 @@ export class InstanceWindow {
       (details, callback) => {
         callback({
           responseHeaders: {
-            "Access-Control-Allow-Origin": ["*"],
+            ...details.responseHeaders,
             "Content-Security-Policy": [
               "default-src 'self'; connect-src * ; child-src * ; font-src 'self'; img-src * ; style-src 'self'; script-src 'self'; object-src 'self'; frame-src 'self'; media-src * ; frame-ancestors 'self';",
             ],
-            ...details.responseHeaders,
+            "Access-Control-Allow-Origin": ["*"],
+            "Access-Control-Allow-Headers": ["*"],
+            "Access-Control-Allow-Methods": ["*"],
           },
         });
       }
     );
+    this.app.setBackgroundColor("#eff0ff");
     if (!entry) {
       //entry is optional. In case of no entry, default to index.html
       await this.app.webContents.loadFile(join(path, "index.html"));
@@ -144,8 +164,16 @@ export class InstanceWindow {
       await this.app.webContents.loadFile(join(path, entry));
     }
   }
-  public addAction (type: string, data: string) {
+  public addAction(type: string, data: string) {
     return this.Session.addAction(type, data);
   }
-  
+  public reload() {
+    this.app.reload();
+  }
+  public openDevTools() {
+    this.app.webContents.openDevTools();
+  }
+  public setQueryString(v = "") {
+    this.query = v;
+  }
 }
