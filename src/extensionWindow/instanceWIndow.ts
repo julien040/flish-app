@@ -1,25 +1,4 @@
-/*
- * File: \src\extensionWindow\instanceWIndow.ts
- * Project: flish-app
- * Created Date: Wednesday December 8th 2021
- * Author: Julien Cagniart
- * -----
- * Last Modified: 13/12/2021 16:50
- * Modified By: Julien Cagniart
- * -----
- * Copyright (c) 2021 Julien - juliencagniart40@gmail.com
- * -----
- * _______ _ _      _                 _             
-(_______) (_)    | |               | |            
- _____  | |_  ___| | _           _ | | ____ _   _ 
-|  ___) | | |/___) || \         / || |/ _  ) | | |
-| |     | | |___ | | | |   _   ( (_| ( (/ / \ V / 
-|_|     |_|_(___/|_| |_|  (_)   \____|\____) \_/  
-                                                   
- * Purpose of this file : 
- *  Link to documentation associated with this file : (empty) 
- */
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { join } from "path";
 
 import { BrowserWindow, screen, ipcMain } from "electron";
@@ -32,6 +11,7 @@ import {
   windowOpenHandle,
 } from "./handler";
 import { Session } from "./session";
+import { logConsoleMessage } from "../internal/logging";
 
 export class InstanceWindow {
   public app: BrowserWindow;
@@ -53,13 +33,13 @@ export class InstanceWindow {
   }
   private recreateApp() {
     const screenSize = screen.getPrimaryDisplay().size;
-    console.log(this.query, "query");
 
     this.app = new BrowserWindow({
       webPreferences: {
         devTools: true,
         preload: join(__dirname, "preload.js"),
         additionalArguments: [
+          // These arguments will be sent as env variable to the preload script
           JSON.stringify(this.ExtensionData),
           JSON.stringify(this.InstanceData),
           JSON.stringify(this.query),
@@ -96,12 +76,6 @@ export class InstanceWindow {
    * @param id The id of the instance to load
    */
   async loadInstance(id: string): Promise<void> {
-    /* if (this.InstanceData != undefined) {
-      //Case application ask to load an instance while already being loaded
-      if (this.InstanceData.instanceID == id) {
-        return;
-      }
-    } */
     const { extension, instance } = await getInstance(id);
     this.InstanceData = instance;
     this.ExtensionData = extension;
@@ -123,7 +97,7 @@ export class InstanceWindow {
     );
     //Argument is a function returning a boolean
     this.app.webContents.session.setPermissionCheckHandler(
-      (webcontent, permission: any, requestingOrigin) => {
+      (permission: any) => {
         this.Session.addAction("permissionCheck", permission);
         return permissionCheckHandler(permission, extension);
       }
@@ -143,16 +117,19 @@ export class InstanceWindow {
     );
     this.app.webContents.session.webRequest.onHeadersReceived(
       (details, callback) => {
+        details.responseHeaders["Access-Control-Allow-Origin"] = ["*"];
+        details.responseHeaders["Access-Control-Allow-Methods"] = ["*"];
+        details.responseHeaders["Access-Control-Allow-Headers"] = ["*"];
+        // Some webservers return CORS header, but not capitalized correctly so it leads to duplicate headers
+        delete details.responseHeaders["access-control-allow-origin"];
+        delete details.responseHeaders["access-control-allow-methods"];
+        delete details.responseHeaders["access-control-allow-headers"];
+        details.responseHeaders["Content-Security-Policy"] = [
+          "default-src 'self'; connect-src * ; child-src * ; font-src 'self' 'unsafe-inline' ; img-src * ; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'self'; frame-src 'self'; media-src * ; frame-ancestors 'self';",
+        ];
+
         callback({
-          responseHeaders: {
-            ...details.responseHeaders,
-            "Content-Security-Policy": [
-              "default-src 'self'; connect-src * ; child-src * ; font-src 'self'; img-src * ; style-src 'self'; script-src 'self'; object-src 'self'; frame-src 'self'; media-src * ; frame-ancestors 'self';",
-            ],
-            "Access-Control-Allow-Origin": ["*"],
-            "Access-Control-Allow-Headers": ["*"],
-            "Access-Control-Allow-Methods": ["*"],
-          },
+          responseHeaders: details.responseHeaders,
         });
       }
     );
@@ -163,17 +140,22 @@ export class InstanceWindow {
     } else {
       await this.app.webContents.loadFile(join(path, entry));
     }
+    this.app.webContents.on("console-message", (e, level, message) => {
+      if (level === 3) {
+        logConsoleMessage("danger", this.ExtensionData.uuid, message);
+      }
+    });
   }
-  public addAction(type: string, data: string) {
+  public addAction(type: string, data: string): void {
     return this.Session.addAction(type, data);
   }
-  public reload() {
+  public reload(): void {
     this.app.reload();
   }
-  public openDevTools() {
+  public openDevTools(): void {
     this.app.webContents.openDevTools();
   }
-  public setQueryString(v = "") {
+  public setQueryString(v = ""): void {
     this.query = v;
   }
 }

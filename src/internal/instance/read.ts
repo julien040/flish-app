@@ -1,24 +1,3 @@
-/*
- * File: \src\internal\instance\read.ts
- * Project: flish-app
- * Created Date: Wednesday December 8th 2021
- * Author: Julien Cagniart
- * -----
- * Last Modified: 11/12/2021 18:05
- * Modified By: Julien Cagniart
- * -----
- * Copyright (c) 2021 Julien - juliencagniart40@gmail.com
- * -----
- * _______ _ _      _                 _             
-(_______) (_)    | |               | |            
- _____  | |_  ___| | _           _ | | ____ _   _ 
-|  ___) | | |/___) || \         / || |/ _  ) | | |
-| |     | | |___ | | | |   _   ( (_| ( (/ / \ V / 
-|_|     |_|_(___/|_| |_|  (_)   \____|\____) \_/  
-                                                   
- * Purpose of this file : 
- *  Link to documentation associated with this file : (empty) 
- */
 import { getConfig } from "../store";
 import { Instance } from "./types";
 import { extension } from "../extension/types";
@@ -41,11 +20,13 @@ export const getInstance = async (
   return { instance, extension };
 };
 type dictionnary = {
-  [key: string]: any;
+  [key: string]: unknown;
 };
-export const getEnvVariableOfInstance = async (instanceID: string) => {
+export const getEnvVariableOfInstance = async (
+  instanceID: string
+): Promise<dictionnary> => {
   const { extension } = await getInstance(instanceID);
-  var envVariable = {} as dictionnary;
+  const envVariable = {} as dictionnary;
   for (let index = 0; index < extension.envVariables.length; index++) {
     const element = extension.envVariables[index];
     if (element.needToBeEncrypted) {
@@ -62,7 +43,7 @@ export const getEnvVariableOfInstance = async (instanceID: string) => {
   return envVariable;
 };
 
-export const getAllInstances = async () => {
+export const getAllInstances = async (): Promise<Record<string, Instance>> => {
   const data: { [key: string]: Instance } = await getConfig("instances");
   if (!data) {
     return {};

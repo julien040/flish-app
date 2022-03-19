@@ -1,37 +1,21 @@
-/*
- * File: \src\internal\instance\create.ts
- * Project: flish-app
- * Created Date: Wednesday December 8th 2021
- * Author: Julien Cagniart
- * -----
- * Last Modified: 18/12/2021 19:02
- * Modified By: Julien Cagniart
- * -----
- * Copyright (c) 2021 Julien - juliencagniart40@gmail.com
- * -----
- * _______ _ _      _                 _             
-(_______) (_)    | |               | |            
- _____  | |_  ___| | _           _ | | ____ _   _ 
-|  ___) | | |/___) || \         / || |/ _  ) | | |
-| |     | | |___ | | | |   _   ( (_| ( (/ / \ V / 
-|_|     |_|_(___/|_| |_|  (_)   \____|\____) \_/  
-                                                   
- * Purpose of this file : 
- *  Link to documentation associated with this file : (empty) 
- */
-import { envVariables } from "../extension/types"; // import type for environment variables
 import { Instance, updateEnvVariables } from "./types"; //import type for the instance object
 import { nanoid } from "nanoid"; // To generate a unique ID
 import { doesExtensionExist } from "../extension/utils/exists";
 import { setConfig } from "../store";
 import config from "../../config";
 import keytar = require("keytar"); // To store the encrypted values
+import captureEvent from "../analytics";
 
 export const createInstance = async (
   extensionID: string,
-  options: { name: string; keyboard?: string; envVariable?: updateEnvVariables[] }
-) => {
-  let { name, keyboard, envVariable } = options;
+  options: {
+    name: string;
+    keyboard?: string;
+    envVariable?: updateEnvVariables[];
+  }
+): Promise<void> => {
+  const { name } = options;
+  let { keyboard, envVariable } = options;
   if (!keyboard) {
     keyboard = "";
   }
@@ -53,16 +37,20 @@ export const createInstance = async (
 
   await saveEnvVariable(instanceID, envVariable);
   await setConfig(`instances.${instanceID}`, instance); // We set the instance object in the config store
+  captureEvent("Instance created", {
+    extensionID: extensionID,
+    name: name,
+  });
 };
 export async function saveEnvVariable(
   instanceID: string,
   envVariable: updateEnvVariables[]
-) {
+): Promise<void> {
   for (let index = 0; index < envVariable.length; index++) {
     // For each env variable
     const element = envVariable[index];
     element.value ??= ""; // If no value is set, set it to empty string
-    element.value = element.value.toString()
+    element.value = element.value.toString();
     if (element.needToBeEncrypted === true) {
       //If it should be encrypted, we set it in the keychain
       await keytar.setPassword(
@@ -71,7 +59,10 @@ export async function saveEnvVariable(
         element.value
       ); //Service name is defined in the config file. Key is the instanceID and the name of the env variable. We then set the value to an empty string
     } else {
-      await setConfig(`envVariable.${instanceID}.${element.name}`, element.value);
+      await setConfig(
+        `envVariable.${instanceID}.${element.name}`,
+        element.value
+      );
     }
   }
 }

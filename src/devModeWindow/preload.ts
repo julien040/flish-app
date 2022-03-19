@@ -1,27 +1,6 @@
-/*
- * File: \src\extensionWindow\preload.ts
- * Project: flish-app
- * Created Date: Thursday December 9th 2021
- * Author: Julien Cagniart
- * -----
- * Last Modified: 12/12/2021 13:51
- * Modified By: Julien Cagniart
- * -----
- * Copyright (c) 2021 Julien - juliencagniart40@gmail.com
- * -----
- * _______ _ _      _                 _             
-(_______) (_)    | |               | |            
- _____  | |_  ___| | _           _ | | ____ _   _ 
-|  ___) | | |/___) || \         / || |/ _  ) | | |
-| |     | | |___ | | | |   _   ( (_| ( (/ / \ V / 
-|_|     |_|_(___/|_| |_|  (_)   \____|\____) \_/  
-                                                   
- * Purpose of this file : 
- *  Link to documentation associated with this file : (empty) 
- */
 import { extension } from "../internal/extension/types";
 import { Instance } from "../internal/instance/types";
-import { contextBridge, ipcRenderer } from "electron";
+import { contextBridge } from "electron";
 import {
   appendFile as af,
   mkdir as mk,
@@ -31,10 +10,29 @@ import {
   showItemInFolder as sf,
 } from "../extensionWindow/api/fs";
 import config from "../config";
-const extensionData: extension = JSON.parse(process.argv[15]);
-const instanceData: Instance = JSON.parse(process.argv[16]);
-const query: string = JSON.parse(process.argv[17]);
-const envVariable: Object = JSON.parse(process.argv[18]);
+
+/* This snippet retrieves the index of the additional argument */
+let indexOfExtensionData;
+for (let index = 0; index < process.argv.length; index++) {
+  const element = process.argv[index];
+  try {
+    const data = JSON.parse(element);
+    if (data.description !== undefined) {
+      indexOfExtensionData = index;
+      break;
+    }
+  } catch (error) {
+    continue;
+  }
+}
+const extensionData: extension = JSON.parse(process.argv[indexOfExtensionData]);
+const instanceData: Instance = JSON.parse(
+  process.argv[indexOfExtensionData + 1]
+);
+const query: string = JSON.parse(process.argv[indexOfExtensionData + 2]);
+const envVariable: Record<string, unknown> = JSON.parse(
+  process.argv[indexOfExtensionData + 3]
+);
 
 contextBridge.exposeInMainWorld("flish", {
   /** This returns informations about the extension */
@@ -47,11 +45,11 @@ contextBridge.exposeInMainWorld("flish", {
   envVariable: envVariable,
   /** A set of APIs to interact with flish */
   application: {
-    openProfileSettings: () => {},
+    /* openProfileSettings: () => {},
     openExtensionPage: () => {},
-    closeApp: () => {},
+    closeApp: () => {}, */
     getAppVersion: config.appVersion,
-    getAuthToken: () => {},
+    /* getAuthToken: () => {}, */
   },
   utilities: {
     getPlatform: () => {
@@ -62,7 +60,7 @@ contextBridge.exposeInMainWorld("flish", {
     },
   },
   logging: {
-    logEvent: (event: string, data: any) => {},
+    /* logEvent: (event: string, data: any) => {}, */
   },
   fs: {
     readFile: (path: string, encoding?: string) => {

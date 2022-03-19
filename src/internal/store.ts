@@ -1,27 +1,4 @@
-/*
- * File: \src\internal\store.ts
- * Project: flish-app
- * Created Date: Sunday December 5th 2021
- * Author: Julien Cagniart
- * -----
- * Last Modified: 08/12/2021 17:32
- * Modified By: Julien Cagniart
- * -----
- * Copyright (c) 2021 Julien - juliencagniart40@gmail.com
- */
-/*  _______ _ _      _                 _             
-(_______) (_)    | |               | |            
- _____  | |_  ___| | _           _ | | ____ _   _ 
-|  ___) | | |/___) || \         / || |/ _  ) | | |
-| |     | | |___ | | | |   _   ( (_| ( (/ / \ V / 
-|_|     |_|_(___/|_| |_|  (_)   \____|\____) \_/  
-                                                   
- * Purpose of the file :  Handle the config store of the application
- 
- * Link to documentation associated with this file :  */
-
- 
-import Store = require('electron-store');
+import Store = require("electron-store");
 
 /* const schema = {
     data : {
@@ -110,20 +87,25 @@ import Store = require('electron-store');
   }
  */
 
-const store = new Store({name: 'config', /* encryptionKey:"9YpZoMZlo7lfbsWY8Fx1hzTo9BUHSmOT", */ fileExtension:"flish"});
+const store = new Store({
+  name: "config",
+  /* encryptionKey:"9YpZoMZlo7lfbsWY8Fx1hzTo9BUHSmOT", */ fileExtension:
+    "flish",
+});
 
 /**
 * Description : get Any value from the config
 * 
 * If the value is not found, return null
+*
 * Example : 
- * ```typescript
-    await getConfig("key")
+* ```typescript
+  await getConfig("key")
 * ```
 **/
-export const getConfig = async (key:string): Promise<any> => {
-    return await store.get(key, null);
-    
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const getConfig = async (key: string): Promise<any> => {
+  return await store.get(key, null);
 };
 /**
 * Description : set Any value from the config
@@ -133,8 +115,11 @@ export const getConfig = async (key:string): Promise<any> => {
     setConfig("key.dot", {key: "value"})
 * ```
 **/
-export const setConfig = async (key:string, object:any): Promise<void> => {
-    store.set(key, object);
+export const setConfig = async (
+  key: string,
+  object: unknown
+): Promise<void> => {
+  store.set(key, object);
 };
 
 /**
@@ -145,6 +130,6 @@ export const setConfig = async (key:string, object:any): Promise<void> => {
     deleteConfig("key.dot")
 * ```
 **/
-export const deleteConfig = async (key:string): Promise<void> => {
+export const deleteConfig = async (key: string): Promise<void> => {
   store.delete(key);
 };

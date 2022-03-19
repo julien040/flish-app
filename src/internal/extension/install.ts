@@ -1,33 +1,13 @@
-/*
- * File: \src\internal\extension\install.ts
- * Project: flish-app
- * Created Date: Sunday December 5th 2021
- * Author: Julien Cagniart
- * -----
- * Last Modified: 16/12/2021 10:11
- * Modified By: Julien Cagniart
- * -----
- * Copyright (c) 2021 Julien - juliencagniart40@gmail.com
- * -----
- * _______ _ _      _                 _             
-(_______) (_)    | |               | |            
- _____  | |_  ___| | _           _ | | ____ _   _ 
-|  ___) | | |/___) || \         / || |/ _  ) | | |
-| |     | | |___ | | | |   _   ( (_| ( (/ / \ V / 
-|_|     |_|_(___/|_| |_|  (_)   \____|\____) \_/  
-                                                   
- * Purpose of this file : Install an extension from the web
- *  Link to documentation associated with this file : (empty) 
- */
-
 import { extension } from "./types";
 import config from "../../config";
 import { join } from "path";
 import https = require("https");
 import axios from "axios";
+//eslint-disable-next-line @typescript-eslint/no-var-requires
 const unzipper = require("unzipper");
 import { setConfig } from "../store";
 import getAppDataPath from "appdata-path";
+import captureEvent from "../analytics";
 
 /**
 * Description : Install an extension from an api specified in the config file
@@ -44,22 +24,24 @@ export const installExtension = async (
   uuid: string,
   callback?: (info: string) => void,
   path?: string
-) => {
+): Promise<void> => {
   // Get the extension from the api
   const urlManifest = config.extensionApiURL + uuid;
   if (!callback) {
     //In case no callback has been given
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     callback = (): void => {};
   }
   callback("Waiting API");
   const { data } = await axios.get<extension>(urlManifest);
   callback("Manifest Fetched"); //Return the folder where the data for the application is stored. It's an electron feature
-  var folderToExtract: string; //In case no path has been given, we will use the default one (userPath/extensions/{uuid})
+  let folderToExtract: string; //In case no path has been given, we will use the default one (userPath/extensions/{uuid})
   if (!path) {
     folderToExtract = join(userPath, "extensions", uuid);
   } else {
     folderToExtract = path;
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   https.get(data.downloadURL, (res: any) => {
     //Make an https request to the download url. The response should always be a zip file
     callback("Downloading");
@@ -70,7 +52,8 @@ export const installExtension = async (
       callback("Installed");
     });
   });
+  captureEvent("Extension Installed", { extensionID: uuid });
   await new Promise((resolve) => {
     resolve("Installed");
-  })
+  });
 };

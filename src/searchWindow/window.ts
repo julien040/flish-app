@@ -1,6 +1,7 @@
 import { BrowserWindow, shell } from "electron";
 import { join } from "path";
 import { windowOpenHandle } from "../extensionWindow/handler";
+import captureEvent from "../internal/analytics";
 
 export class searchWindow {
   private _window: BrowserWindow;
@@ -17,8 +18,8 @@ export class searchWindow {
         partition: "persist:search",
       },
     });
+    /* this._window.loadURL("http://localhost:3000"); */
     this._window.loadFile(join(__dirname, "/../../searchApp/index.html"));
-
     this._window.on("close", (e) => {
       e.preventDefault();
       this.hide();
@@ -36,11 +37,12 @@ export class searchWindow {
     });
     /*     this._window.webContents.openDevTools({ mode: "detach" }); */
   }
-  public show() {
+  public show(): void {
+    captureEvent("Search bar opened");
     this._window.show();
     this._window.focus();
   }
-  public hide() {
+  public hide(): void {
     this._window.hide();
     this._window.webContents.reload(); //To go back and remove any data
   }

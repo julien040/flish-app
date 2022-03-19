@@ -1,28 +1,5 @@
-/*
- * File: \src\internal\instance\update.ts
- * Project: flish-app
- * Created Date: Wednesday December 8th 2021
- * Author: Julien Cagniart
- * -----
- * Last Modified: 08/12/2021 18:33
- * Modified By: Julien Cagniart
- * -----
- * Copyright (c) 2021 Julien - juliencagniart40@gmail.com
- * -----
- * _______ _ _      _                 _             
-(_______) (_)    | |               | |            
- _____  | |_  ___| | _           _ | | ____ _   _ 
-|  ___) | | |/___) || \         / || |/ _  ) | | |
-| |     | | |___ | | | |   _   ( (_| ( (/ / \ V / 
-|_|     |_|_(___/|_| |_|  (_)   \____|\____) \_/  
-                                                   
- * Purpose of this file : 
- *  Link to documentation associated with this file : (empty) 
- */
-import { envVariables } from "../extension/types";
 import { setConfig } from "../store";
 import config from "../../config";
-import { saveEnvVariable } from "./create";
 import { updateEnvVariables } from "./types";
 import { setPassword } from "keytar";
 
@@ -38,7 +15,7 @@ export const updateInstance = async (
     keyboard?: string;
     envVariable?: updateEnvVariables[];
   }
-) => {
+): Promise<void> => {
   //If name should be changed
   const { name, keyboard, envVariable } = options;
   if (name != undefined) {

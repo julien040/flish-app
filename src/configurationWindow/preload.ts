@@ -1,28 +1,11 @@
-/*
- * File: \src\configurationWindow\preload.ts
- * Project: flish-app
- * Created Date: Monday December 13th 2021
- * Author: Julien Cagniart
- * -----
- * Last Modified: 16/12/2021 15:01
- * Modified By: Julien Cagniart
- * -----
- * Copyright (c) 2021 Julien - juliencagniart40@gmail.com
- * -----
- * _______ _ _      _                 _             
-(_______) (_)    | |               | |            
- _____  | |_  ___| | _           _ | | ____ _   _ 
-|  ___) | | |/___) || \         / || |/ _  ) | | |
-| |     | | |___ | | | |   _   ( (_| ( (/ / \ V / 
-|_|     |_|_(___/|_| |_|  (_)   \____|\____) \_/  
-                                                   
- * Purpose of this file : 
- *  Link to documentation associated with this file : (empty) 
- */
-import { join } from "path";
-import { contextBridge, app, shell } from "electron";
+//Electron
+import { contextBridge } from "electron";
+
+//Extensions
 import { installExtension } from "../internal/extension/install";
 import { getExtension, getAllExtensions } from "../internal/extension/read";
+
+//Instances
 import {
   getInstance,
   getAllInstances,
@@ -31,6 +14,12 @@ import {
 import { createInstance } from "../internal/instance/create";
 import { updateEnvVariables } from "../internal/instance/types";
 import { updateInstance } from "../internal/instance/update";
+
+//Bookmarks
+import { createBookmark } from "../internal/bookmark/create";
+import { getAllBookmarksArray } from "../internal/bookmark/read";
+
+//Config
 import config from "../config";
 import { getConfig, setConfig } from "../internal/store";
 
@@ -77,6 +66,14 @@ contextBridge.exposeInMainWorld("admin", {
   getConfig: () => {
     return config;
   },
+  //Bookmarks
+  createBookmark: async (name: string, url: string, icon?: string) => {
+    return await createBookmark(name, url, icon);
+  },
+  getAllBookmarks: async () => {
+    return await getAllBookmarksArray();
+  },
+  //Params
   setTelemetry: async (value: boolean) => {
     await setConfig("telemetry", value);
   },

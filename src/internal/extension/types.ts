@@ -1,36 +1,14 @@
-/*
- * File: \src\internal\extension\types.ts
- * Project: flish-app
- * Created Date: Sunday December 5th 2021
- * Author: Julien Cagniart
- * -----
- * Last Modified: 15/12/2021 10:44
- * Modified By: Julien Cagniart
- * -----
- * Copyright (c) 2021 Julien - juliencagniart40@gmail.com
- * -----
- * _______ _ _      _                 _             
-(_______) (_)    | |               | |            
- _____  | |_  ___| | _           _ | | ____ _   _ 
-|  ___) | | |/___) || \         / || |/ _  ) | | |
-| |     | | |___ | | | |   _   ( (_| ( (/ / \ V / 
-|_|     |_|_(___/|_| |_|  (_)   \____|\____) \_/  
-                                                   
- * Purpose of this file : Types for the extension
- *  Link to documentation associated with this file : (empty) 
- */
-
 export interface envVariables {
   /** In the form, name will be the label. Also, it will be the identifier when an extension call the env variable API */
   name: string;
   /** In the form, this will influence appearance (using a checkbox e.g.). Default to string */
-  type?: "string" /* | "number" | "boolean"; */
+  type?: "string" /* | "number" | "boolean"; */;
   /** If required, user can't skip the input. Label will have a small red star */
   /* required?: boolean; */
   /** What would be shown below the input */
   description?: string;
   /** A default value to fallback if no input. If not specified in boolean, fallback to false */
-  defaultValue?: any;
+  defaultValue?: string | number | boolean;
   /** In case of "number" or "string", the placeholder is what would be shown in the input until nothing is written */
   placeholder?: string;
   /** If set to true, value will be saved in keychain (or platform equivalent for linux or windows) */
@@ -44,26 +22,20 @@ export interface extension {
   name: string;
   /** The description of the extension */
   description: string;
-  /** The download URL of the extension. It is a zip that will be uncompress */
-  downloadURL: string;
   /** The version of the extension */
   version: string;
+  /** URL to zip of extension */
+  downloadURL: string;
   /** Hash over extension files  */
   hash?: string;
-  /** The author of the extension */
-  author?: string;
-  /** The url of the extension */
-  link: string;
   /** Absolute path to the extension */
   path: string;
-  /** The mode of the app | search => app is shown but search bar is still shown, normal => on enter pressed, focus is given to extension and search bar disappear, noArgument => when choosen, no argument could be given */
+  /** The mode of the app | search => app is shown and search bar too, normal => on enter pressed, focus is given to extension and search bar disappear, noArgument => when choosen, no argument could be given */
   mode?: "search" | "normal" | "noArgument" | "headless";
-  /** The HTML file name to load in the window */
+  /** The HTML file name to load in the window. Useful when differs from index.html */
   entry?: string;
-  /** The icon of the extension */
+  /** The icon of the extension. Could be an HTTP URL, or a local path */
   icon: string;
-  /** An app could have multiple functionnalities. These are suggestion offered by the interface (e.g /notion search => If you want search to be recommend, put it in the array)  */
-  textSuggestion?: string[];
   /** Permissions required by the extension. Specify the capabilities of the extension (could be empty)  */
   permissions: (
     | "notifications"
@@ -74,6 +46,12 @@ export interface extension {
   )[];
   /** Array of environment Variable required by the extension. User will be prompt answering them (could be empty) */
   envVariables: envVariables[];
-  /** If the extension is premium */
+  /** If the extension is premium. Not available now */
   premium?: boolean;
+  /** Placeholder in the search bar when query */
+  placeholder?: string;
+  /** A small text explaining what should be typed (in markdown) */
+  explanation?: string;
+  /** A link to a tutorial to see how to use the extension */
+  tutorial?: string;
 }

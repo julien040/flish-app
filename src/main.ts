@@ -4,7 +4,10 @@ import { searchWindow } from "./searchWindow/window";
 import { ConfigurationWindow } from "./configurationWindow/window";
 import DevModeWindow from "./devModeWindow/devWindow";
 import { getConfig } from "./internal/store";
+import config from "./config";
 import { join } from "path";
+import { onReady } from "./internal/analytics";
+import * as Sentry from "@sentry/electron";
 
 let configurationWindow: ConfigurationWindow;
 let search: searchWindow;
@@ -12,6 +15,7 @@ const instanceWindow = new InstanceWindow();
 const devModeWindow = new DevModeWindow();
 let tray: Tray;
 
+Sentry.init({ dsn: config.sentryDsn });
 /* 
 Avoid CORS issues when a POST Request is made using a JSON payload.
 When sending a post JSON, chrome will first send a preflight request to the server to check if the request is allowed.
@@ -22,6 +26,7 @@ Similar as : https://github.com/electron/electron/issues/20730
 app.commandLine.appendSwitch("disable-features", "OutOfBlinkCors");
 
 app.on("ready", async () => {
+  onReady();
   configurationWindow = new ConfigurationWindow();
   search = new searchWindow();
   ipcMain.on("showSearch", () => search.show());
@@ -32,6 +37,7 @@ app.on("ready", async () => {
     instanceWindow.setQueryString(text);
     instanceWindow.loadInstance(id);
   });
+  ipcMain.on("openDevMode", () => devModeWindow.create());
   tray = new Tray(join(__dirname, "64x64.png"));
   const shortcut = await getConfig("shortcut");
   const menu = Menu.buildFromTemplate([
@@ -54,12 +60,16 @@ app.on("ready", async () => {
     {
       label: "Reload current extension",
       type: "normal",
-      click: () => instanceWindow.reload(),
+      click: () => {
+        instanceWindow.app !== undefined ? instanceWindow.reload() : null;
+      },
     },
     {
       label: "Open dev tools",
       type: "normal",
-      click: () => instanceWindow.openDevTools(),
+      click: () => {
+        instanceWindow.app !== undefined ? instanceWindow.openDevTools() : null;
+      },
     },
     {
       type: "separator",
@@ -126,5 +136,6 @@ app.on("ready", async () => {
   ]);
   tray.setToolTip("Open search bar or settings");
   tray.setContextMenu(menu);
+  tray.on("click", () => search.show());
   globalShortcut.register(shortcut || "ALT+P", () => search.show());
 });

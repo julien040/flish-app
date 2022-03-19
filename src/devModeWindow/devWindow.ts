@@ -4,31 +4,26 @@ import { windowOpenHandle } from "../extensionWindow/handler";
 import { extension } from "../internal/extension/types";
 import { Instance } from "../internal/instance/types";
 import { getConfig } from "../internal/store";
-import {
-  permissionCheckHandler,
-  permissionRequestHandler,
-} from "../extensionWindow/handler";
+import captureEvent from "../internal/analytics";
 
 class DevModeWindow {
   private _window: BrowserWindow;
-  private url: string = "http://localhost:3000/";
-  private query: string = "";
-  private mockData: Object = {};
-  private headless: boolean = false;
+  private url = "http://localhost:3000/";
+  private query = "";
+  private mockData = {};
+  private headless = false;
   private extension: extension;
   private instance: Instance;
   constructor() {
     this.extension = {
       description: "Extension in dev mode",
-      downloadURL: "https://example.com",
       hash: "",
       icon: "",
-      link: "",
+      downloadURL: "",
       name: "Dev Mode",
       permissions: ["clipboard", "fs", "geolocation", "media", "notifications"],
       envVariables: [],
       path: "",
-      textSuggestion: [],
       uuid: "",
       version: "",
     };
@@ -39,10 +34,10 @@ class DevModeWindow {
     };
     this.refreshData();
   }
-  public refresh() {
+  public refresh(): void {
     this._window.webContents.reload();
   }
-  public async refreshData() {
+  public async refreshData(): Promise<void> {
     const urlDevMode = await getConfig("urlDevMode");
     const mockDevMode = await getConfig("mockDevMode");
     const queryDevMode = await getConfig("queryDevMode");
@@ -61,11 +56,19 @@ class DevModeWindow {
     }
   }
 
-  public async create() {
+  public async create(): Promise<void> {
+    await this.refreshData();
     if (this._window) {
       this._window.destroy();
+    } else {
+      captureEvent("devMode opened", {
+        url: this.url,
+        headless: this.headless,
+        isQueryEmpty: this.query === "",
+        isMockEmpty: Object.keys(this.mockData).length === 0,
+      });
     }
-    await this.refreshData();
+
     this._window = new BrowserWindow({
       width: 800,
       height: 600,
@@ -73,7 +76,6 @@ class DevModeWindow {
       show: !this.headless,
       webPreferences: {
         preload: join(__dirname, "preload.js"),
-        partition: "devMode",
         additionalArguments: [
           JSON.stringify(this.extension),
           JSON.stringify(this.instance),
@@ -103,25 +105,28 @@ class DevModeWindow {
     );
     this._window.webContents.session.webRequest.onHeadersReceived(
       (details, callback) => {
+        details.responseHeaders["Access-Control-Allow-Origin"] = ["*"];
+        details.responseHeaders["Access-Control-Allow-Methods"] = ["*"];
+        details.responseHeaders["Access-Control-Allow-Headers"] = ["*"];
+        // Some webservers return CORS header, but not capitalized correctly so it leads to duplicate headers
+        delete details.responseHeaders["access-control-allow-origin"];
+        delete details.responseHeaders["access-control-allow-methods"];
+        delete details.responseHeaders["access-control-allow-headers"];
+        details.responseHeaders["Content-Security-Policy"] = [
+          "default-src 'self'; connect-src * ; child-src * ; font-src 'self' 'unsafe-inline' ; img-src * ; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'self'; frame-src 'self'; media-src * ; frame-ancestors 'self';",
+        ];
+
         callback({
-          responseHeaders: {
-            ...details.responseHeaders,
-            "Content-Security-Policy": [
-              "default-src 'self'; connect-src * ; child-src * ; font-src 'self' 'unsafe-inline' ; img-src * ; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'self'; frame-src 'self'; media-src * ; frame-ancestors 'self';",
-            ],
-            "Access-Control-Allow-Origin": ["*"],
-            "Access-Control-Allow-Headers": ["*"],
-            "Access-Control-Allow-Methods": ["*"],
-          },
+          responseHeaders: details.responseHeaders,
         });
       }
     );
     this._window.setBackgroundColor("#eff0ff");
   }
-  public openDevTools() {
+  public openDevTools(): void {
     this._window.webContents.openDevTools({ mode: "detach" });
   }
-  public destroy() {
+  public destroy(): void {
     this._window.destroy();
   }
 }
