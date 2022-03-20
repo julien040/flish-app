@@ -18,6 +18,7 @@ import { updateInstance } from "../internal/instance/update";
 //Bookmarks
 import { createBookmark } from "../internal/bookmark/create";
 import { getAllBookmarksArray } from "../internal/bookmark/read";
+import deleteBookmark from "../internal/bookmark/delete";
 
 //Config
 import config from "../config";
@@ -68,10 +69,13 @@ contextBridge.exposeInMainWorld("admin", {
   },
   //Bookmarks
   createBookmark: async (name: string, url: string, icon?: string) => {
-    return await createBookmark(name, url, icon);
+    await createBookmark(name, url, icon);
   },
   getAllBookmarks: async () => {
     return await getAllBookmarksArray();
+  },
+  deleteBookmark: async (bookmarkID: string) => {
+    return await deleteBookmark(bookmarkID);
   },
   //Params
   setTelemetry: async (value: boolean) => {
