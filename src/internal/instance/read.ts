@@ -4,6 +4,10 @@ import { extension } from "../extension/types";
 import { getPassword } from "keytar";
 import config from "../../config";
 
+/**
+ * Get metadata about a specific instance
+ * @param  {string} instanceID The unique id of the instance
+ */
 export const getInstance = async (
   instanceID: string
 ): Promise<{ instance: Instance; extension: extension }> => {
@@ -19,9 +23,15 @@ export const getInstance = async (
 
   return { instance, extension };
 };
+
+// For typescript to work
 type dictionnary = {
   [key: string]: unknown;
 };
+
+/** Return the env variables of an instance
+ * @param  {string} instanceID The unique id of the instance
+ */
 export const getEnvVariableOfInstance = async (
   instanceID: string
 ): Promise<dictionnary> => {
@@ -42,7 +52,9 @@ export const getEnvVariableOfInstance = async (
   }
   return envVariable;
 };
-
+/**
+ * Return an object containing all instances and their metadata
+ */
 export const getAllInstances = async (): Promise<Record<string, Instance>> => {
   const data: { [key: string]: Instance } = await getConfig("instances");
   if (!data) {

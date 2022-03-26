@@ -9,6 +9,7 @@ import { setConfig } from "../store";
 import getAppDataPath from "appdata-path";
 import captureEvent from "../analytics";
 
+const userPath = getAppDataPath("flish");
 /**
 * Description : Install an extension from an api specified in the config file
 * 
@@ -18,8 +19,8 @@ import captureEvent from "../analytics";
 * Example : 
  * ```typescript
  await installExtension("656454sd5f4s5", callback, "C://Users/Loki/Desktop/");
-```*/
-const userPath = getAppDataPath("flish");
+```
+*/
 export const installExtension = async (
   uuid: string,
   callback?: (info: string) => void,

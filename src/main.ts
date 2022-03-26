@@ -50,7 +50,7 @@ app.on("ready", async () => {
     },
     {
       label: "Settings",
-      sublabel: "Install or remove extensions",
+      sublabel: "Configure extensions, bookmarks, etc.",
       type: "normal",
       click: () => configurationWindow.show(),
     },
@@ -58,21 +58,26 @@ app.on("ready", async () => {
       type: "separator",
     },
     {
-      label: "Reload current extension",
-      type: "normal",
-      click: () => {
-        instanceWindow.app !== undefined ? instanceWindow.reload() : null;
-      },
-    },
-    {
-      label: "Open dev tools",
-      type: "normal",
-      click: () => {
-        instanceWindow.app !== undefined ? instanceWindow.openDevTools() : null;
-      },
-    },
-    {
-      type: "separator",
+      label: "Current instance debugger",
+      type: "submenu",
+      submenu: [
+        {
+          label: "Reload",
+          type: "normal",
+          click: () => {
+            instanceWindow.app !== undefined ? instanceWindow.reload() : null;
+          },
+        },
+        {
+          label: "Open dev tools",
+          type: "normal",
+          click: () => {
+            instanceWindow.app !== undefined
+              ? instanceWindow.openDevTools()
+              : null;
+          },
+        },
+      ],
     },
     {
       label: "Developer mode",
@@ -87,7 +92,7 @@ app.on("ready", async () => {
           type: "separator",
         },
         {
-          label: "Refresh page",
+          label: "Refresh extension",
           type: "normal",
           sublabel: "Like F5",
           click: () => devModeWindow.refresh(),
@@ -105,11 +110,11 @@ app.on("ready", async () => {
           type: "separator",
         },
         {
-          label: "Open dev tools in new window",
+          label: "Open dev tools in a new window",
           type: "normal",
           click: () => devModeWindow.openDevTools(),
           accelerator:
-            process.platform === "darwin" ? "Cmd+Maj+I" : "CTRL+Maj+I", //Mac use Cmd and not Ctrl
+            process.platform === "darwin" ? "Cmd+Shift+I" : "CTRL+Shift+I", //Mac use Cmd and not Ctrl
         },
         /* {
           type: "separator",
@@ -126,7 +131,7 @@ app.on("ready", async () => {
       type: "separator",
     },
     {
-      label: "Quit",
+      label: "Quit application",
       type: "normal",
       click: () => {
         tray = null;
@@ -134,7 +139,7 @@ app.on("ready", async () => {
       },
     },
   ]);
-  tray.setToolTip("Open search bar or settings");
+  tray.setToolTip("Flish");
   tray.setContextMenu(menu);
   tray.on("click", () => search.show());
   globalShortcut.register(shortcut || "ALT+P", () => search.show());

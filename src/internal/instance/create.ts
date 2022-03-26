@@ -6,11 +6,23 @@ import config from "../../config";
 import keytar = require("keytar"); // To store the encrypted values
 import captureEvent from "../analytics";
 
+/** Create an instance of an extension. Name provided will be used in the search bar and in settings.
+ *
+ * @example
+ * ```typescript
+ * await createInstance("id",{name:"My Extension"});
+ * ```
+ * @param  {string} extensionID The unique id of the extension
+ * @param  {{name:string;keyboard:string;envVariable:updateEnvVariables[];}} options The options of the instance (name, shortcut, config)
+ */
 export const createInstance = async (
   extensionID: string,
   options: {
+    /** Name shown in the instance list */
     name: string;
+    /** The keyboard shortcut to open the instance */
     keyboard?: string;
+    /** The environment variables to set */
     envVariable?: updateEnvVariables[];
   }
 ): Promise<void> => {
@@ -42,6 +54,12 @@ export const createInstance = async (
     name: name,
   });
 };
+
+/**
+ * Save the env variables of an instance in the secure store or in the config store following its storage type
+ * @param  {string} instanceID The unique id of the instance
+ * @param  {updateEnvVariables[]} envVariable An array of envVariable objects to set
+ */
 export async function saveEnvVariable(
   instanceID: string,
   envVariable: updateEnvVariables[]
