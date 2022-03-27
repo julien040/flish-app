@@ -130,6 +130,11 @@ export class InstanceWindow {
 
         callback({
           responseHeaders: details.responseHeaders,
+          //Case server does not support CORS, we need to set the status code to 200 when OPTIONS request
+          statusLine:
+            details.method === "OPTIONS"
+              ? "HTTP/1.1 200 OK"
+              : details.statusLine,
         });
       }
     );

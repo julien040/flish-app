@@ -5,7 +5,7 @@ import { ConfigurationWindow } from "./configurationWindow/window";
 import DevModeWindow from "./devModeWindow/devWindow";
 import { getConfig } from "./internal/store";
 import config from "./config";
-import { join } from "path";
+import { join, resolve } from "path";
 import { onReady } from "./internal/analytics";
 import * as Sentry from "@sentry/electron";
 
@@ -25,6 +25,26 @@ Similar as : https://github.com/electron/electron/issues/20730
 */
 app.commandLine.appendSwitch("disable-features", "OutOfBlinkCors");
 
+// ENsure only one instance of the app is running
+const isLocked = app.requestSingleInstanceLock();
+if (!isLocked) {
+  app.quit();
+} else {
+  app.on("second-instance", () => {
+    // Someone tried to run a second instance, we should focus our window.
+    search.show();
+  });
+}
+
+if (process.defaultApp) {
+  if (process.argv.length >= 2) {
+    app.setAsDefaultProtocolClient("electron-api-demos", process.execPath, [
+      resolve(process.argv[1]),
+    ]);
+  }
+} else {
+  app.setAsDefaultProtocolClient("electron-api-demos");
+}
 app.on("ready", async () => {
   onReady();
   configurationWindow = new ConfigurationWindow();
@@ -143,4 +163,10 @@ app.on("ready", async () => {
   tray.setContextMenu(menu);
   tray.on("click", () => search.show());
   globalShortcut.register(shortcut || "ALT+P", () => search.show());
+});
+
+app.on("open-url", (e, url) => {
+  e.preventDefault();
+  console.log(url);
+  search.show();
 });

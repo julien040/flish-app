@@ -51,4 +51,11 @@ export class ConfigurationWindow {
   public hide(): void {
     this._window.hide();
   }
+  public changeURL(url: string): void {
+    this._window.webContents.send("changeURL", url);
+  }
+  public openURL(url: string): void {
+    this.changeURL(url);
+    this.show();
+  }
 }

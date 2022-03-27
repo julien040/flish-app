@@ -1,5 +1,5 @@
 //Electron
-import { contextBridge } from "electron";
+import { contextBridge, ipcRenderer, IpcRendererEvent } from "electron";
 
 //Extensions
 import { installExtension } from "../internal/extension/install";
@@ -25,6 +25,8 @@ import config from "../config";
 import { getConfig, setConfig } from "../internal/store";
 
 contextBridge.exposeInMainWorld("admin", {
+  changeURL: (callback: (event: IpcRendererEvent) => void) =>
+    ipcRenderer.on("changeURL", callback),
   installExtension: async (extensionID: string) => {
     try {
       await installExtension(extensionID);

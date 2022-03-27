@@ -118,6 +118,10 @@ class DevModeWindow {
 
         callback({
           responseHeaders: details.responseHeaders,
+          statusLine:
+            details.method === "OPTIONS"
+              ? "HTTP/1.1 200 OK"
+              : details.statusLine,
         });
       }
     );
