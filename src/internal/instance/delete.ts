@@ -30,10 +30,16 @@ export const deleteInstance = async (id: string): Promise<void> => {
       await deleteConfig(`envVariable.${instance.instanceID}.${element.name}`);
     }
   }
-  const instanceSession = session.fromPartition(
-    "persist:" + instance.instanceID
-  );
-  await instanceSession.clearStorageData();
+  // Delete session data
+  try {
+    // In case instance has never been opened, we need to catch the error
+    const instanceSession = session.fromPartition(
+      "persist:" + instance.instanceID
+    );
+    await instanceSession.clearStorageData();
+  } catch (error) {
+    // Do nothing
+  }
   await deleteConfig(`instances.${id}`);
   captureEvent("Instance deleted", {
     extensionID: instance.extensionID,

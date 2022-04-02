@@ -4,6 +4,7 @@ import { contextBridge, ipcRenderer, IpcRendererEvent } from "electron";
 //Extensions
 import { installExtension } from "../internal/extension/install";
 import { getExtension, getAllExtensions } from "../internal/extension/read";
+import deleteExtension from "../internal/extension/delete";
 
 //Instances
 import {
@@ -14,6 +15,7 @@ import {
 import { createInstance } from "../internal/instance/create";
 import { updateEnvVariables } from "../internal/instance/types";
 import { updateInstance } from "../internal/instance/update";
+import { deleteInstance } from "../internal/instance/delete";
 
 //Bookmarks
 import { createBookmark } from "../internal/bookmark/create";
@@ -43,6 +45,13 @@ contextBridge.exposeInMainWorld("admin", {
   getExtensions: async () => {
     return await getAllExtensions();
   },
+  deleteExtension: async (extensionID: string) => {
+    try {
+      await deleteExtension(extensionID);
+    } catch (error) {
+      console.error(error);
+    }
+  },
   getInstance: async (instanceID: string) => {
     return await getInstance(instanceID);
   },
@@ -54,7 +63,10 @@ contextBridge.exposeInMainWorld("admin", {
     name: string,
     envVariable: updateEnvVariables[]
   ) => {
-    return await createInstance(id, { name, envVariable });
+    await createInstance(id, { name, envVariable });
+  },
+  deleteInstance: async (id: string) => {
+    await deleteInstance(id);
   },
   getEnvVariable: async (instanceID: string) => {
     return await getEnvVariableOfInstance(instanceID);

@@ -9,7 +9,7 @@ const id = getMachineID();
 /* We take the host URL from config.ts */
 const client = new PostHog(config.posthogApiKey, {
   host: config.posthogHost,
-  flushAt: 5,
+  flushAt: 2,
 });
 
 /**

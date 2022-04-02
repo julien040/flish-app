@@ -2,7 +2,7 @@ import { getAllInstances } from "../instance/read";
 import { deleteConfig } from "../store";
 import getAppDataPath from "appdata-path";
 import { join } from "path";
-import { rmdir } from "fs/promises";
+import { rm } from "fs/promises";
 import captureEvent from "../analytics";
 
 const userPath = getAppDataPath("flish");
@@ -26,8 +26,12 @@ async function deleteExtension(id: string): Promise<void> {
     }
   }
   // Delete folder
-  const folderToDelete = join(userPath, "extensions", id);
-  await rmdir(folderToDelete, { recursive: true });
+  try {
+    const folderToDelete = join(userPath, "extensions", id);
+    await rm(folderToDelete, { recursive: true });
+  } catch (error) {
+    // Do nothing
+  }
 
   // Delete config
   await deleteConfig(`extensions.${id}`);
