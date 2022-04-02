@@ -51,7 +51,9 @@ export interface extension {
   /** Placeholder in the search bar when query */
   placeholder?: string;
   /** A small text explaining what should be typed (in markdown) */
-  explanation?: string;
+  README: string;
   /** A link to a tutorial to see how to use the extension */
-  tutorial?: string;
+  tutorial: string;
+  /** A link to open the extension page in settings */
+  link: string;
 }

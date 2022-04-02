@@ -25,8 +25,11 @@ import config from "../config";
 import { getConfig, setConfig } from "../internal/store";
 
 contextBridge.exposeInMainWorld("admin", {
-  changeURL: (callback: (event: IpcRendererEvent) => void) =>
-    ipcRenderer.on("changeURL", callback),
+  changeURL: (callback: (url: string) => void) => {
+    ipcRenderer.on("changeURL", (e: IpcRendererEvent, url: string) => {
+      callback(url);
+    });
+  },
   installExtension: async (extensionID: string) => {
     try {
       await installExtension(extensionID);

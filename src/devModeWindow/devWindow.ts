@@ -26,6 +26,9 @@ class DevModeWindow {
       path: "",
       uuid: "",
       version: "",
+      README: "",
+      link: "",
+      tutorial: "",
     };
     this.instance = {
       extensionID: "",

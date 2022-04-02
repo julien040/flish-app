@@ -36,7 +36,8 @@ async function createBookmark(
       bookmarkID,
       name,
       url,
-      icon: icon ?? generateDefaultIconLink(url),
+      icon:
+        icon === undefined || icon === "" ? generateDefaultIconLink(url) : icon,
     };
     await setConfig(`bookmarks.${bookmarkID}`, bookmark);
     captureEvent("Bookmark created", {

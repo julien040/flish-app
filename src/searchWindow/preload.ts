@@ -41,7 +41,9 @@ contextBridge.exposeInMainWorld("admin", {
           extensionName: extension.name,
           mode: extension.mode,
           placeholder: extension.placeholder,
-          explanation: extension.explanation,
+          readme: extension.README,
+          tutorial: extension.tutorial,
+          marketplaceLink: extension.link,
         });
       }
     }

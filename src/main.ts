@@ -7,6 +7,7 @@ import { getConfig } from "./internal/store";
 import config from "./config";
 import { join, resolve } from "path";
 import { onReady } from "./internal/analytics";
+import protocolHandler from "./internal/protocolHandler";
 import * as Sentry from "@sentry/electron";
 
 let configurationWindow: ConfigurationWindow;
@@ -24,26 +25,32 @@ So we need to tell chrome to desactivate.
 Similar as : https://github.com/electron/electron/issues/20730
 */
 app.commandLine.appendSwitch("disable-features", "OutOfBlinkCors");
+/* app.removeAsDefaultProtocolClient("flish"); */
 
 // ENsure only one instance of the app is running
 const isLocked = app.requestSingleInstanceLock();
 if (!isLocked) {
   app.quit();
 } else {
-  app.on("second-instance", () => {
-    // Someone tried to run a second instance, we should focus our window.
-    search.show();
+  app.on("second-instance", (e, argv) => {
+    // Only for Windows. Fired when flish is opened with a protocol link
+    const url = argv[argv.length - 1];
+    protocolHandler(
+      configurationWindow.openURL.bind(configurationWindow),
+      search.show.bind(search),
+      url
+    );
   });
 }
 
 if (process.defaultApp) {
   if (process.argv.length >= 2) {
-    app.setAsDefaultProtocolClient("electron-api-demos", process.execPath, [
+    app.setAsDefaultProtocolClient("flish", process.execPath, [
       resolve(process.argv[1]),
     ]);
   }
 } else {
-  app.setAsDefaultProtocolClient("electron-api-demos");
+  app.setAsDefaultProtocolClient("flish");
 }
 app.on("ready", async () => {
   onReady();
@@ -136,6 +143,7 @@ app.on("ready", async () => {
           accelerator:
             process.platform === "darwin" ? "Cmd+Shift+I" : "CTRL+Shift+I", //Mac use Cmd and not Ctrl
         },
+
         /* {
           type: "separator",
         },
@@ -163,10 +171,24 @@ app.on("ready", async () => {
   tray.setContextMenu(menu);
   tray.on("click", () => search.show());
   globalShortcut.register(shortcut || "ALT+P", () => search.show());
+  /*  
+  Last element of process.argv is either a url or a file path.
+  If it's a url, we need to open it in the corresponding window.
+  If not, we do nothing.
+  */
+  const argument = process.argv[process.argv.length - 1];
+  try {
+    const url = new URL(argument);
+    protocolHandler(
+      configurationWindow.openURL.bind(configurationWindow),
+      search.show.bind(search),
+      url.toString()
+    );
+  } catch (error) {
+    // Not a valid URL
+  }
 });
 
 app.on("open-url", (e, url) => {
-  e.preventDefault();
-  console.log(url);
-  search.show();
+  protocolHandler(configurationWindow.openURL, search.show.bind(search), url);
 });

@@ -3,7 +3,9 @@
  */
 export default {
   /** URL of the API for the extension marketplace */
-  extensionApiURL: "https://extension-api.flish.dev/",
+  extensionApiURL: "https://marketplace-api.flish.dev/extension/",
+  /** URL of the bookmark API */
+  bookmarkApiURL: "https://marketplace-api.flish.dev/bookmark/",
   /** When using keychain (or its equivalent), keytar library require a service name. */
   secureStoreAppName: "flish-app",
   /** App Name */

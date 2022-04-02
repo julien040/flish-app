@@ -13,6 +13,7 @@ export class searchWindow {
       center: true,
       frame: false,
       show: false,
+      thickFrame: false,
       webPreferences: {
         preload: join(__dirname, "preload.js"),
         partition: "persist:search",
