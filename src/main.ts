@@ -8,6 +8,7 @@ import config from "./config";
 import { join, resolve } from "path";
 import { onReady } from "./internal/analytics";
 import protocolHandler from "./internal/protocolHandler";
+import handleSearchInstance from "./internal/searchMode/main";
 import * as Sentry from "@sentry/electron";
 
 let configurationWindow: ConfigurationWindow;
@@ -15,6 +16,7 @@ let search: searchWindow;
 const instanceWindow = new InstanceWindow();
 const devModeWindow = new DevModeWindow();
 let tray: Tray;
+let searchHandler: unknown;
 
 Sentry.init({ dsn: config.sentryDsn });
 /* 
@@ -65,6 +67,17 @@ app.on("ready", async () => {
     instanceWindow.loadInstance(id);
   });
   ipcMain.on("openDevMode", () => devModeWindow.create());
+  ipcMain.on("createSearchInstance", (e, type: "dev" | "prod", id?: string) => {
+    // In a variable to avoid the function to be called twice
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    searchHandler = handleSearchInstance(
+      type,
+      id,
+      instanceWindow,
+      devModeWindow,
+      search
+    );
+  });
   tray = new Tray(join(__dirname, "64x64.png"));
   const shortcut = await getConfig("shortcut");
   const menu = Menu.buildFromTemplate([

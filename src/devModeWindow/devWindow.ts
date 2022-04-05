@@ -1,10 +1,11 @@
-import { BrowserWindow, shell } from "electron";
+import { BrowserWindow, shell, ipcMain } from "electron";
 import { join } from "path";
 import { windowOpenHandle } from "../extensionWindow/handler";
 import { extension } from "../internal/extension/types";
 import { Instance } from "../internal/instance/types";
 import { getConfig } from "../internal/store";
 import captureEvent from "../internal/analytics";
+import downloadHandler from "../extensionWindow/download";
 
 class DevModeWindow {
   private _window: BrowserWindow;
@@ -87,6 +88,10 @@ class DevModeWindow {
         ],
       },
     });
+    ipcMain.on("downloadURLDev", (event, arg) => {
+      this._window.webContents.downloadURL(arg);
+    });
+    this._window.webContents.session.on("will-download", downloadHandler);
     this._window.loadURL(this.url);
     this._window.webContents.on("will-navigate", (e, url) => {
       const link = new URL(url);
@@ -135,6 +140,9 @@ class DevModeWindow {
   }
   public destroy(): void {
     this._window.destroy();
+  }
+  public sendContent(channel: string, content: unknown): void {
+    this._window.webContents.send(channel, content);
   }
 }
 

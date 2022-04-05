@@ -12,6 +12,8 @@ import {
 } from "./handler";
 import { Session } from "./session";
 import { logConsoleMessage } from "../internal/logging";
+import downloadHandler from "./download";
+import { notifyError } from "../internal/notifications";
 
 export class InstanceWindow {
   public app: BrowserWindow;
@@ -25,10 +27,15 @@ export class InstanceWindow {
     /* this.recreateApp(); */
     if (id != undefined) {
       //If the id is specified, the class will load data about the instance
-      getInstance(id).then((data) => {
-        this.InstanceData = data.instance;
-        this.ExtensionData = data.extension;
-      });
+      getInstance(id)
+        .then((data) => {
+          this.InstanceData = data.instance;
+          this.ExtensionData = data.extension;
+        })
+        .catch((err) => {
+          notifyError("This instance does not exist");
+          throw new Error(err);
+        });
     }
   }
   private recreateApp() {
@@ -46,7 +53,11 @@ export class InstanceWindow {
         ],
         partition: `persist:${this.InstanceData.instanceID}`,
       },
-      show: this.ExtensionData.mode === "headless" ? false : true,
+      show:
+        this.ExtensionData.mode === "headless" ||
+        this.ExtensionData.mode === "search"
+          ? false
+          : true,
       autoHideMenuBar: true,
       width: 800,
       height: 600,
@@ -56,6 +67,9 @@ export class InstanceWindow {
     this.Session = new Session(this.ExtensionData.uuid);
     ipcMain.on("logApiCall", (event, arg) => {
       this.addAction("fs", arg[0]);
+    });
+    ipcMain.on("downloadURL", (event, arg) => {
+      this.app.webContents.downloadURL(arg);
     });
   }
   // This method show the app
@@ -76,7 +90,10 @@ export class InstanceWindow {
    * @param id The id of the instance to load
    */
   async loadInstance(id: string): Promise<void> {
-    const { extension, instance } = await getInstance(id);
+    const { extension, instance } = await getInstance(id).catch((err) => {
+      notifyError("This extension does not exist");
+      throw new Error(err);
+    });
     this.InstanceData = instance;
     this.ExtensionData = extension;
     const { path, entry } = this.ExtensionData;
@@ -139,11 +156,23 @@ export class InstanceWindow {
       }
     );
     this.app.setBackgroundColor("#eff0ff");
+    this.app.webContents.session.on("will-download", (event, item) => {
+      this.Session.addAction("download", item.getURL());
+      downloadHandler(event, item);
+    });
     if (!entry) {
       //entry is optional. In case of no entry, default to index.html
-      await this.app.webContents.loadFile(join(path, "index.html"));
+      await this.app.webContents
+        .loadFile(join(path, "index.html"))
+        .catch((err) => {
+          notifyError("Error loading extension files");
+          console.error(err);
+        });
     } else {
-      await this.app.webContents.loadFile(join(path, entry));
+      await this.app.webContents.loadFile(join(path, entry)).catch((err) => {
+        notifyError("Error loading extension files");
+        console.error(err);
+      });
     }
     this.app.webContents.on("console-message", (e, level, message) => {
       if (level === 3) {
@@ -162,5 +191,8 @@ export class InstanceWindow {
   }
   public setQueryString(v = ""): void {
     this.query = v;
+  }
+  public sendContent(channel: string, content: unknown): void {
+    this.app.webContents.send(channel, content);
   }
 }

@@ -1,6 +1,6 @@
 import { extension } from "../internal/extension/types";
 import { Instance } from "../internal/instance/types";
-import { contextBridge, ipcRenderer } from "electron";
+import { contextBridge, ipcRenderer, IpcRendererEvent } from "electron";
 import { getEnvVariableOfInstance } from "../internal/instance/read";
 import {
   appendFile as af,
@@ -11,6 +11,7 @@ import {
   showItemInFolder as sf,
 } from "./api/fs";
 import config from "../config";
+import { searchResult } from "./types";
 
 /* This snippet retrieves the index of the additional argument */
 let indexOfExtensionData;
@@ -63,6 +64,25 @@ contextBridge.exposeInMainWorld("flish", {
       ipcRenderer.send("getAuthToken", instanceData.instanceID);
     },
   },
+  /** A set of APIs to act when extension is in search mode */
+  search: {
+    queryListener: (callback: (query: string) => void) => {
+      ipcRenderer.on("queryEvent", (e: IpcRendererEvent, query: string) => {
+        callback(query);
+      });
+    },
+    chosenResultListener: (callback: (result: searchResult) => void) => {
+      ipcRenderer.on(
+        "resultChosenEvent",
+        (e: IpcRendererEvent, result: searchResult) => {
+          callback(result);
+        }
+      );
+    },
+    sendResult: (result: searchResult[]) => {
+      ipcRenderer.send("searchResult", result);
+    },
+  },
   utilities: {
     getPlatform: () => {
       return process.platform;
@@ -98,5 +118,8 @@ contextBridge.exposeInMainWorld("flish", {
     showItemInFolder: (path: string) => {
       sf(extensionData, path);
     }, //Not working
+    downloadURL: (url: string) => {
+      ipcRenderer.send("downloadURL", url);
+    },
   },
 });

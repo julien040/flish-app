@@ -45,6 +45,18 @@ export class searchWindow {
   }
   public hide(): void {
     this._window.hide();
-    this._window.webContents.reload(); //To go back and remove any data
+    setTimeout(() => {
+      this._window.reload();
+    }, 500);
+  }
+  public sendContent(
+    channel: string,
+    content:
+      | Array<string | Record<string, unknown> | number>
+      | string
+      | number
+      | Record<string, unknown>
+  ): void {
+    this._window.webContents.send(channel, content);
   }
 }

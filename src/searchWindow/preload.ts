@@ -1,7 +1,9 @@
-import { contextBridge, ipcRenderer, shell } from "electron";
+import { contextBridge, ipcRenderer, shell, IpcRendererEvent } from "electron";
 import { getAllInstances } from "../internal/instance/read";
 import { getAllBookmarksArray } from "../internal/bookmark/read";
 import { getExtension } from "../internal/extension/read";
+import { searchResult } from "../extensionWindow/types";
+import { getURLDevMode } from "../utils/getConfig";
 import { bookmark } from "../internal/bookmark/create";
 
 contextBridge.exposeInMainWorld("admin", {
@@ -14,14 +16,49 @@ contextBridge.exposeInMainWorld("admin", {
   openExternal: (url: string) => {
     shell.openExternal(url);
   },
-
+  search: {
+    sendQuery: (query: string) => {
+      ipcRenderer.send("searchQuery", query);
+    },
+    eventResult: (callback: (result: searchResult[]) => void) => {
+      ipcRenderer.on(
+        "resultEvent",
+        (e: IpcRendererEvent, result: searchResult[]) => {
+          callback(result);
+        }
+      );
+    },
+    optionChosen: (result: searchResult) => {
+      ipcRenderer.send("resultChosenEvent", result);
+    },
+    /**
+     * @param  {"dev"|"prod"} type If dev, open the instance in dev mode. If prod, open the instance from extension Window
+     * @param  {string} id If dev, is undefined. If prod, the id of the instance
+     */
+    launchSearchInstance: (type: "dev" | "prod", id?: string): void => {
+      if (type === "dev") {
+        ipcRenderer.send("createSearchInstance", "dev");
+      } else {
+        ipcRenderer.send("createSearchInstance", "prod", id);
+      }
+      return;
+    },
+    closeSearchInstance: (): void => {
+      ipcRenderer.send("closeSearchInstance");
+    },
+  },
+  other: {
+    getURLDevMode: async () => {
+      return await getURLDevMode();
+    },
+  },
   openSettings: (page: string) => {
     ipcRenderer.send("openSettings", page);
   },
   openDevMode: () => {
     ipcRenderer.send("openDevMode");
   },
-  launchInstance: (uuid: string, query: string) => {
+  launchInstance: (uuid: string, query?: string) => {
     ipcRenderer.send("launchInstance", uuid, query);
   },
   getData: async () => {

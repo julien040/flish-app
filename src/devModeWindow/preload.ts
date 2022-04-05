@@ -1,6 +1,7 @@
 import { extension } from "../internal/extension/types";
 import { Instance } from "../internal/instance/types";
-import { contextBridge } from "electron";
+import { contextBridge, ipcRenderer, IpcRendererEvent } from "electron";
+import { searchResult } from "../extensionWindow/types";
 import {
   appendFile as af,
   mkdir as mk,
@@ -59,6 +60,25 @@ contextBridge.exposeInMainWorld("flish", {
       return instanceData.instanceID;
     },
   },
+  /** A set of APIs to act when extension is in search mode */
+  search: {
+    queryListener: (callback: (query: string) => void) => {
+      ipcRenderer.on("queryEvent", (e: IpcRendererEvent, query: string) => {
+        callback(query);
+      });
+    },
+    chosenResultListener: (callback: (result: searchResult) => void) => {
+      ipcRenderer.on(
+        "resultChosenEvent",
+        (e: IpcRendererEvent, result: searchResult) => {
+          callback(result);
+        }
+      );
+    },
+    sendResult: (result: searchResult[]) => {
+      ipcRenderer.send("searchResult", result);
+    },
+  },
   logging: {
     /* logEvent: (event: string, data: any) => {}, */
   },
@@ -81,5 +101,8 @@ contextBridge.exposeInMainWorld("flish", {
     showItemInFolder: (path: string) => {
       sf(extensionData, path);
     }, //Not working
+    downloadURL: (url: string) => {
+      ipcRenderer.send("downloadURLDev", url);
+    },
   },
 });
