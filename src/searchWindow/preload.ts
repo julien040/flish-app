@@ -2,7 +2,7 @@ import { contextBridge, ipcRenderer, shell, IpcRendererEvent } from "electron";
 import { getAllInstances } from "../internal/instance/read";
 import { getAllBookmarksArray } from "../internal/bookmark/read";
 import { getExtension } from "../internal/extension/read";
-import { searchResult } from "../extensionWindow/types";
+import { searchResult } from "../internal/searchMode/types";
 import { getURLDevMode } from "../utils/getConfig";
 import { bookmark } from "../internal/bookmark/create";
 

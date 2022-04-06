@@ -1,15 +1,8 @@
 import { extension } from "../internal/extension/types";
 import { Instance } from "../internal/instance/types";
 import { contextBridge, ipcRenderer, IpcRendererEvent } from "electron";
-import { searchResult } from "../extensionWindow/types";
-import {
-  appendFile as af,
-  mkdir as mk,
-  openFolder as of,
-  readFile as rf,
-  readdir as rd,
-  showItemInFolder as sf,
-} from "../extensionWindow/api/fs";
+import { searchResult } from "../internal/searchMode/types";
+import { showItemInFolder as sf } from "../extensionWindow/api/fs";
 import config from "../config";
 
 /* This snippet retrieves the index of the additional argument */
@@ -83,21 +76,6 @@ contextBridge.exposeInMainWorld("flish", {
     /* logEvent: (event: string, data: any) => {}, */
   },
   fs: {
-    readFile: (path: string, encoding?: string) => {
-      return rf(extensionData, path, encoding);
-    },
-    readDir: (path: string) => {
-      return rd(extensionData, path);
-    },
-    appendFile: (path: string, data: string) => {
-      return af(extensionData, path, data);
-    },
-    mkDir: (path: string) => {
-      return mk(extensionData, path);
-    },
-    openPath: (path: string) => {
-      return of(extensionData, path);
-    },
     showItemInFolder: (path: string) => {
       sf(extensionData, path);
     }, //Not working

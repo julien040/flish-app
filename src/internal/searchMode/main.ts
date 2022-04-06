@@ -2,7 +2,7 @@ import { ipcMain, IpcMainEvent } from "electron";
 import { InstanceWindow } from "../../extensionWindow/instanceWIndow";
 import DevModeWindow from "../../devModeWindow/devWindow";
 import { searchWindow } from "../../searchWindow/window";
-import { searchResult } from "../../extensionWindow/types";
+import { searchResult } from "./types";
 
 function handleSearchInstance(
   type: "dev" | "prod",

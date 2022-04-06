@@ -10,11 +10,17 @@ export const windowOpenHandle = ({
   url,
 }: HandlerDetails): { action: "allow" | "deny" } => {
   const parsedURL = new URL(url); //https://benjamin-altpeter.de/shell-openexternal-dangers/
-  if (parsedURL.protocol === "https:" || parsedURL.protocol === "http:") {
-    shell.openExternal(parsedURL.toString());
+  // Dangerous protocol
+  if (
+    parsedURL.protocol === "smb:" ||
+    parsedURL.protocol === "nfs:" ||
+    parsedURL.protocol === "ftp:" ||
+    parsedURL.protocol === "file:" ||
+    parsedURL.protocol === "jnlp:"
+  ) {
     return { action: "deny" };
   }
-
+  shell.openExternal(parsedURL.toString());
   return { action: "deny" };
 };
 

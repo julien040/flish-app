@@ -95,6 +95,9 @@ class DevModeWindow {
     this._window.loadURL(this.url);
     this._window.webContents.on("will-navigate", (e, url) => {
       const link = new URL(url);
+      if (link.hostname === "localhost") {
+        return;
+      }
       if (link.protocol === "https:" || link.protocol === "http:") {
         e.preventDefault();
         shell.openExternal(link.toString());

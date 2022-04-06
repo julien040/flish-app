@@ -1,6 +1,6 @@
 type searchResult = {
-  id: string;
-  name: string;
+  value: string;
+  label: string;
   description: string;
   icon: string;
 };
