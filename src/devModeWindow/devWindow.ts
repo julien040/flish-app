@@ -88,11 +88,15 @@ class DevModeWindow {
         ],
       },
     });
+    await this._window.webContents.session.loadExtension(
+      join(__dirname, "../../other/react-dev-tools"),
+      { allowFileAccess: true }
+    );
+
     ipcMain.on("downloadURLDev", (event, arg) => {
       this._window.webContents.downloadURL(arg);
     });
     this._window.webContents.session.on("will-download", downloadHandler);
-    this._window.loadURL(this.url);
     this._window.webContents.on("will-navigate", (e, url) => {
       const link = new URL(url);
       if (link.hostname === "localhost") {
@@ -110,7 +114,11 @@ class DevModeWindow {
     this._window.webContents.session.webRequest.onBeforeSendHeaders(
       (details, callback) => {
         callback({
-          requestHeaders: { ...details.requestHeaders, Origin: "*" },
+          requestHeaders: {
+            ...details.requestHeaders,
+            Origin: "*",
+            "User-Agent": "curl/5.0",
+          },
         });
       }
     );
@@ -124,7 +132,7 @@ class DevModeWindow {
         delete details.responseHeaders["access-control-allow-methods"];
         delete details.responseHeaders["access-control-allow-headers"];
         details.responseHeaders["Content-Security-Policy"] = [
-          "default-src 'self'; connect-src * ; child-src * ; font-src 'self' 'unsafe-inline' ; img-src * ; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'self'; frame-src 'self'; media-src * ; frame-ancestors 'self';",
+          "default-src 'self' chrome-extension: ; connect-src * ; child-src * ; font-src 'self' 'unsafe-inline' ; img-src * ; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'self'; frame-src 'self'; media-src *",
         ];
 
         callback({
@@ -137,6 +145,7 @@ class DevModeWindow {
       }
     );
     this._window.setBackgroundColor("#eff0ff");
+    this._window.loadURL(this.url);
   }
   public openDevTools(): void {
     this._window.webContents.openDevTools({ mode: "detach" });
