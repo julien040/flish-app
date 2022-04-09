@@ -2,6 +2,7 @@ import { ipcMain, IpcMainEvent } from "electron";
 import { InstanceWindow } from "../../extensionWindow/instanceWIndow";
 import DevModeWindow from "../../devModeWindow/devWindow";
 import { searchWindow } from "../../searchWindow/window";
+import captureEvent from "../analytics";
 import { searchResult } from "./types";
 
 function handleSearchInstance(
@@ -15,6 +16,7 @@ function handleSearchInstance(
     // If the type is "dev", this means the search bar asked to open a development instance.
     case "dev":
       devWindow.create();
+      captureEvent("Open dev mode with search");
       break;
     // If the type is "prod", this means the search bar asked to open an instance.
     case "prod":
