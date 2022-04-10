@@ -1,19 +1,22 @@
-import { Notification, DownloadItem } from "electron";
+import { Notification, DownloadItem, shell } from "electron";
 
 function downloadHandler(e: Event, downloadItem: DownloadItem): void {
+  // Because of a weird memory leak issue, we need to remove any listener at the start of a download
+  downloadItem.removeAllListeners("done");
   downloadItem.once("done", (e, state) => {
     if (state === "completed") {
-      console.log("Download completed");
       const notification = new Notification({
         title: "Download completed",
         body: `${downloadItem.getFilename()} has been downloaded`,
         silent: true,
       });
+      notification.once("click", () => {
+        shell.showItemInFolder(downloadItem.getSavePath());
+      });
       notification.show();
-    } else if (state === "cancelled" || state === "interrupted") {
-      console.log("Download cancelled");
+    } else if (state === "interrupted") {
       const notification = new Notification({
-        title: "Download cancelled",
+        title: "Download interrupted",
         body: `Can't download ${downloadItem.getFilename()}`,
         silent: true,
       });

@@ -71,6 +71,11 @@ export class InstanceWindow {
     ipcMain.on("downloadURL", (event, arg) => {
       this.app.webContents.downloadURL(arg);
     });
+    this.app.on("closed", () => {
+      this.app = null;
+      ipcMain.removeAllListeners("logApiCall");
+      ipcMain.removeAllListeners("downloadURL");
+    });
   }
   // This method show the app
   show(): void {

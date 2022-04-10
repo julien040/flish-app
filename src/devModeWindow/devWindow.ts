@@ -146,6 +146,12 @@ class DevModeWindow {
     );
     this._window.setBackgroundColor("#eff0ff");
     this._window.loadURL(this.url);
+    this._window.on("closed", () => {
+      this._window = null;
+      ipcMain.removeAllListeners("downloadURLDev");
+      this._window.webContents.session.removeAllListeners("will-navigate");
+      this._window.webContents.session.removeAllListeners("will-download");
+    });
   }
   public openDevTools(): void {
     this._window.webContents.openDevTools({ mode: "detach" });
