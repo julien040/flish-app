@@ -6,10 +6,9 @@ import axios from "axios";
 //eslint-disable-next-line @typescript-eslint/no-var-requires
 const unzipper = require("unzipper");
 import { setConfig } from "../store";
-import getAppDataPath from "appdata-path";
+import userDataPath from "../../utils/getUserDataPath";
 import captureEvent from "../analytics";
 
-const userPath = getAppDataPath("flish");
 /**
 * Description : Install an extension from an api specified in the config file
 * 
@@ -38,7 +37,7 @@ export const installExtension = async (
   callback("Manifest Fetched"); //Return the folder where the data for the application is stored. It's an electron feature
   let folderToExtract: string; //In case no path has been given, we will use the default one (userPath/extensions/{uuid})
   if (!path) {
-    folderToExtract = join(userPath, "extensions", uuid);
+    folderToExtract = join(userDataPath, "extensions", uuid);
   } else {
     folderToExtract = path;
   }

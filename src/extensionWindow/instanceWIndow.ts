@@ -11,7 +11,7 @@ import {
   windowOpenHandle,
 } from "./handler";
 import { Session } from "./session";
-import { logConsoleMessage } from "../internal/logging";
+import { logConsoleMessage } from "../internal/extension/logging";
 import downloadHandler from "./download";
 import { notifyError } from "../internal/notifications";
 

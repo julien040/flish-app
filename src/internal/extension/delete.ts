@@ -1,11 +1,9 @@
 import { getAllInstances } from "../instance/read";
 import { deleteConfig } from "../store";
-import getAppDataPath from "appdata-path";
+import userDataPath from "../../utils/getUserDataPath";
 import { join } from "path";
 import { rm } from "fs/promises";
 import captureEvent from "../analytics";
-
-const userPath = getAppDataPath("flish");
 
 /** An async function that delete an extension
  *
@@ -27,7 +25,7 @@ async function deleteExtension(id: string): Promise<void> {
   }
   // Delete folder
   try {
-    const folderToDelete = join(userPath, "extensions", id);
+    const folderToDelete = join(userDataPath, "extensions", id);
     await rm(folderToDelete, { recursive: true });
   } catch (error) {
     // Do nothing
