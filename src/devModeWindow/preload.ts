@@ -71,6 +71,9 @@ contextBridge.exposeInMainWorld("flish", {
     sendResult: (result: searchResult[]) => {
       ipcRenderer.send("searchResult", result);
     },
+    sendError: (error: string) => {
+      ipcRenderer.send("errorEventSearch", error);
+    },
   },
   logging: {
     /* logEvent: (event: string, data: any) => {}, */

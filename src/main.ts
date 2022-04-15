@@ -157,7 +157,7 @@ app.on("ready", async () => {
             process.platform === "darwin" ? "Cmd+Shift+I" : "CTRL+Shift+I", //Mac use Cmd and not Ctrl
         },
 
-        /* {
+        {
           type: "separator",
         },
         {
@@ -165,7 +165,7 @@ app.on("ready", async () => {
           type: "normal",
           sublabel: "Close the development instance",
           click: () => devModeWindow.destroy(),
-        }, */
+        },
       ],
     },
     {

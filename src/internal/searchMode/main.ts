@@ -53,6 +53,17 @@ function handleSearchInstance(
   }
   ipcMain.once("resultChosenEvent", resultChosen);
 
+  /* function onError(e: IpcMainEvent, error: string): void {
+    console.log("Error happened", error);
+
+    search.sendContent("errorEventSearch", error);
+    ipcMain.removeListener("searchQuery", searchQuery);
+    ipcMain.removeListener("searchResult", searchResult);
+    ipcMain.removeListener("resultChosenEvent", resultChosen);
+    ipcMain.removeListener("errorEvent", onError);
+  }
+  ipcMain.once("errorEventSearch", onError); */
+
   function closeSearchInstance(): void {
     type === "dev" ? devWindow.destroy() : instance.destroy();
     ipcMain.removeListener("searchQuery", searchQuery);

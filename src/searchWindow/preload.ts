@@ -46,6 +46,14 @@ contextBridge.exposeInMainWorld("admin", {
     closeSearchInstance: (): void => {
       ipcRenderer.send("closeSearchInstance");
     },
+    onError: (callback: (error: string) => void) => {
+      ipcRenderer.on(
+        "errorEventSearch",
+        (e: IpcRendererEvent, error: string) => {
+          callback(error);
+        }
+      );
+    },
   },
   other: {
     getURLDevMode: async () => {

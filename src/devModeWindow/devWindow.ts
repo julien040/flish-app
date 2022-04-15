@@ -144,6 +144,9 @@ class DevModeWindow {
         });
       }
     );
+    if (this.headless) {
+      this._window.webContents.openDevTools({ mode: "detach" });
+    }
     this._window.setBackgroundColor("#eff0ff");
     this._window.loadURL(this.url);
     this._window.on("closed", () => {
