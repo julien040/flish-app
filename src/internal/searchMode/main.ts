@@ -16,7 +16,7 @@ function handleSearchInstance(
   switch (type) {
     // If the type is "dev", this means the search bar asked to open a development instance.
     case "dev":
-      devWindow.create();
+      devWindow.create(true);
       captureEvent("Open dev mode with search");
       break;
     // If the type is "prod", this means the search bar asked to open an instance.

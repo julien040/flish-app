@@ -60,8 +60,11 @@ class DevModeWindow {
     }
   }
 
-  public async create(): Promise<void> {
+  public async create(headless?: boolean): Promise<void> {
     await this.refreshData();
+    if (headless != undefined) {
+      this.headless = headless;
+    }
     if (this._window) {
       this._window.destroy();
       this._window = null;
