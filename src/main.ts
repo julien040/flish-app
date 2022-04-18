@@ -192,11 +192,14 @@ app.on("ready", async () => {
   const argument = process.argv[process.argv.length - 1];
   try {
     const url = new URL(argument);
-    protocolHandler(
-      configurationWindow.openURL.bind(configurationWindow),
-      search.show.bind(search),
-      url.toString()
-    );
+    // Flish has now a little delay to open the window.
+    setTimeout(() => {
+      protocolHandler(
+        configurationWindow.openURL.bind(configurationWindow),
+        search.show.bind(search),
+        url.toString()
+      );
+    }, 5000);
   } catch (error) {
     // Not a valid URL
   }

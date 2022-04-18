@@ -56,4 +56,6 @@ export interface extension {
   tutorial: string;
   /** A link to open the extension page in settings */
   link: string;
+  /** Some metadata about the extension */
+  metadata?: Record<string, string | boolean | number>;
 }

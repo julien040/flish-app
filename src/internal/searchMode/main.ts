@@ -4,6 +4,7 @@ import DevModeWindow from "../../devModeWindow/devWindow";
 import { searchWindow } from "../../searchWindow/window";
 import captureEvent from "../analytics";
 import { searchResult } from "./types";
+import { notifyError } from "../notifications";
 
 function handleSearchInstance(
   type: "dev" | "prod",
@@ -29,10 +30,14 @@ function handleSearchInstance(
   // In this function, we don't use anonymous functions with eventEmitter because we need to remove the listener after the extension is closed.
 
   // Event sent when the user stops typing in the search bar.
-  function searchQuery(e: IpcMainEvent, query: string): void {
+  function searchQuery(e: IpcMainEvent, query: unknown): void {
+    let toSend = "";
+    if (typeof query === "string") {
+      toSend = query;
+    }
     type === "dev"
-      ? devWindow.sendContent("queryEvent", query)
-      : instance.sendContent("queryEvent", query);
+      ? devWindow.sendContent("queryEvent", toSend)
+      : instance.sendContent("queryEvent", toSend);
   }
   ipcMain.on("searchQuery", searchQuery);
 
@@ -53,22 +58,27 @@ function handleSearchInstance(
   }
   ipcMain.once("resultChosenEvent", resultChosen);
 
-  /* function onError(e: IpcMainEvent, error: string): void {
-    console.log("Error happened", error);
+  function onError(e: IpcMainEvent, error: string): void {
+    console.log("Error: ", error);
 
     search.sendContent("errorEventSearch", error);
-    ipcMain.removeListener("searchQuery", searchQuery);
-    ipcMain.removeListener("searchResult", searchResult);
-    ipcMain.removeListener("resultChosenEvent", resultChosen);
-    ipcMain.removeListener("errorEvent", onError);
+    notifyError(error);
   }
-  ipcMain.once("errorEventSearch", onError); */
+  ipcMain.once("errorEventSearch", onError);
 
   function closeSearchInstance(): void {
-    type === "dev" ? devWindow.destroy() : instance.destroy();
+    console.log("Closing search instance");
+
     ipcMain.removeListener("searchQuery", searchQuery);
+    ipcMain.removeListener("errorEvent", onError);
     ipcMain.removeListener("searchResult", searchResult);
     ipcMain.removeListener("resultChosenEvent", resultChosen);
+    ipcMain.removeListener("errorEventSearch", onError);
+    type === "dev"
+      ? setTimeout(() => {
+          devWindow.destroy();
+        }, 30000)
+      : instance.destroy();
   }
   ipcMain.once("closeSearchInstance", closeSearchInstance);
 }

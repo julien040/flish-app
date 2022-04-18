@@ -33,7 +33,7 @@ export class InstanceWindow {
           this.ExtensionData = data.extension;
         })
         .catch((err) => {
-          notifyError("This instance does not exist");
+          notifyError("The profile does not exist");
           throw new Error(err);
         });
     }
@@ -169,14 +169,16 @@ export class InstanceWindow {
       //entry is optional. In case of no entry, default to index.html
       await this.app.webContents
         .loadFile(join(path, "index.html"))
-        .catch((err) => {
-          notifyError("Error loading extension files");
-          console.error(err);
+        .catch(() => {
+          notifyError(
+            "An error occured while loading the files of the extension"
+          );
         });
     } else {
-      await this.app.webContents.loadFile(join(path, entry)).catch((err) => {
-        notifyError("Error loading extension files");
-        console.error(err);
+      await this.app.webContents.loadFile(join(path, entry)).catch(() => {
+        notifyError(
+          "An error occured while loading the files of the extension"
+        );
       });
     }
     this.app.webContents.on("console-message", (e, level, message) => {

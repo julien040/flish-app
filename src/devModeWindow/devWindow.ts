@@ -64,6 +64,7 @@ class DevModeWindow {
     await this.refreshData();
     if (this._window) {
       this._window.destroy();
+      this._window = null;
     } else {
       captureEvent("devMode opened", {
         url: this.url,
@@ -144,9 +145,9 @@ class DevModeWindow {
         });
       }
     );
-    if (this.headless) {
+    /* if (this.headless) {
       this._window.webContents.openDevTools({ mode: "detach" });
-    }
+    } */
     this._window.setBackgroundColor("#eff0ff");
     this._window.loadURL(this.url);
     this._window.on("closed", () => {
