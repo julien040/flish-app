@@ -60,22 +60,22 @@ class DevModeWindow {
     }
   }
 
-  public async create(headless?: boolean): Promise<void> {
+  public async create(search?: boolean): Promise<void> {
     await this.refreshData();
-    if (headless != undefined) {
-      this.headless = headless;
+    if (search != undefined) {
+      this.headless = search;
     }
     if (this._window) {
       this._window.destroy();
       this._window = null;
-    } else {
-      captureEvent("devMode opened", {
-        url: this.url,
-        headless: this.headless,
-        isQueryEmpty: this.query === "",
-        isMockEmpty: Object.keys(this.mockData).length === 0,
-      });
     }
+    captureEvent("devMode opened", {
+      url: this.url,
+      headless: this.headless,
+      isQueryEmpty: this.query === "",
+      inSearchMode: search ?? false,
+      isMockEmpty: Object.keys(this.mockData).length === 0,
+    });
 
     this._window = new BrowserWindow({
       width: 800,
@@ -154,17 +154,22 @@ class DevModeWindow {
     this._window.setBackgroundColor("#eff0ff");
     this._window.loadURL(this.url);
     this._window.on("closed", () => {
-      this._window = null;
       ipcMain.removeAllListeners("downloadURLDev");
       this._window.webContents.session.removeAllListeners("will-navigate");
       this._window.webContents.session.removeAllListeners("will-download");
+      this._window = null;
     });
   }
   public openDevTools(): void {
-    this._window.webContents.openDevTools({ mode: "detach" });
+    if (this._window) {
+      this._window.webContents.openDevTools({ mode: "detach" });
+    }
   }
   public destroy(): void {
-    this._window.destroy();
+    if (this._window) {
+      this._window.destroy();
+      this._window = null;
+    }
   }
   public sendContent(channel: string, content: unknown): void {
     this._window.webContents.send(channel, content);
