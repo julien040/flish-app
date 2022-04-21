@@ -27,6 +27,8 @@ function handleSearchInstance(
       throw new Error("Invalid type");
       break;
   }
+  const searchQueries: string[] = [];
+
   // In this function, we don't use anonymous functions with eventEmitter because we need to remove the listener after the extension is closed.
 
   // Event sent when the user stops typing in the search bar.
@@ -38,6 +40,11 @@ function handleSearchInstance(
     type === "dev"
       ? devWindow.sendContent("queryEvent", toSend)
       : instance.sendContent("queryEvent", toSend);
+
+    // We log search
+    if (type === "prod") {
+      searchQueries.push(toSend);
+    }
   }
   ipcMain.on("searchQuery", searchQuery);
 
@@ -79,6 +86,13 @@ function handleSearchInstance(
           devWindow.destroy();
         }, 30000)
       : instance.destroy();
+
+    if (type === "prod") {
+      captureEvent("Search closed in extension", {
+        id: id,
+        queries: searchQueries,
+      });
+    }
   }
   ipcMain.once("closeSearchInstance", closeSearchInstance);
 }
