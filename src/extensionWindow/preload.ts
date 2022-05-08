@@ -40,7 +40,12 @@ contextBridge.exposeInMainWorld("flish", {
   /** This returns the query */
   query: query,
   /** This returns the environment variable specified by the user */
-  envVariable: envVariable,
+  envVariable: () => {
+    while (envVariable == null) {
+      continue;
+    }
+    return envVariable;
+  },
   /** A set of APIs to interact with flish */
   application: {
     openProfileSettings: () => {

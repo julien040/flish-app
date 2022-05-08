@@ -1,7 +1,7 @@
 import { createInstance } from "./instance/create";
 import { getExtension } from "./extension/read";
-import { logMessage } from "./logging/logging";
 import { updateEnvVariables } from "./instance/types";
+import { dialogInfo, dialogError } from "./notifications";
 
 function protocolHandler(
   openUrlInSettings: (url: string) => void,
@@ -13,7 +13,6 @@ function protocolHandler(
 
   const firstElement = path.split("/")[0];
   const secondElement = path.split("/")[1];
-  console.log("URL :", firstElement, secondElement);
 
   switch (firstElement) {
     case "settings":
@@ -22,9 +21,12 @@ function protocolHandler(
       break;
     case "profile":
       if (secondElement.startsWith("new")) {
-        createInstanceFromProtocol(path.replace("profile/new", "")).catch((e) =>
-          logMessage("error", e.message)
-        );
+        createInstanceFromProtocol(path.replace("profile/new", ""))
+          .then(() => {
+            dialogInfo("New profile", "The profile has been created");
+            openUrlInSettings("/extension/");
+          })
+          .catch((e) => dialogError(e.message));
       }
       break;
     default:

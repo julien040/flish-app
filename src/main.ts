@@ -58,6 +58,8 @@ app.on("ready", async () => {
   onReady();
   configurationWindow = new ConfigurationWindow();
   search = new searchWindow();
+  // We don't need more listeners
+  ipcMain.setMaxListeners(2);
   ipcMain.on("showSearch", () => search.show());
   ipcMain.on("hideSearch", () => search.hide());
   ipcMain.on("openSettings", () => configurationWindow.show());
@@ -175,7 +177,8 @@ app.on("ready", async () => {
       label: "Quit application",
       type: "normal",
       click: () => {
-        tray = null;
+        tray.destroy();
+        globalShortcut.unregisterAll();
         app.exit();
       },
     },
@@ -199,7 +202,7 @@ app.on("ready", async () => {
         search.show.bind(search),
         url.toString()
       );
-    }, 5000);
+    }, 800);
   } catch (error) {
     // Not a valid URL
   }

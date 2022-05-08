@@ -148,6 +148,10 @@ class DevModeWindow {
         });
       }
     );
+    this._window.webContents.on("console-message", (e, level, message) => {
+      console.log(`[${level}] ${message}`);
+    });
+
     /* if (this.headless) {
       this._window.webContents.openDevTools({ mode: "detach" });
     } */
@@ -163,6 +167,12 @@ class DevModeWindow {
   public openDevTools(): void {
     if (this._window) {
       this._window.webContents.openDevTools({ mode: "detach" });
+    }
+  }
+  public detachDevTools(): void {
+    if (this._window) {
+      this._window.webContents.openDevTools({ mode: "detach" });
+      this._window.webContents.debugger.detach();
     }
   }
   public destroy(): void {

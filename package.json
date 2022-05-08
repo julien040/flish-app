@@ -1,13 +1,15 @@
 {
   "name": "flish-app",
   "version": "0.0.1",
-  "description": "The flish App",
+  "description": "Flish, a search bar for power users",
+  "productName": "Flish",
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
     "lint": "eslint -c .eslintrc --ext .ts ./src",
     "start": "npm run build && electron ./dist/main.js",
-    "electron": "electron ./dist/main.js"
+    "electron": "electron ./dist/main.js",
+    "compile": "npm run build && electron-packager ."
   },
   "repository": "https://github.com/julien040/flish",
   "keywords": [
@@ -21,7 +23,8 @@
     "@types/node": "^17.0.21",
     "@typescript-eslint/eslint-plugin": "^4.33.0",
     "@typescript-eslint/parser": "^4.33.0",
-    "electron": "^17.2.0",
+    "electron": "^18.2.0",
+    "electron-packager": "^15.5.1",
     "eslint": "^7.32.0",
     "typescript": "^4.6.2"
   },

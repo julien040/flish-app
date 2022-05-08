@@ -4,7 +4,7 @@ import DevModeWindow from "../../devModeWindow/devWindow";
 import { searchWindow } from "../../searchWindow/window";
 import captureEvent from "../analytics";
 import { searchResult } from "./types";
-import { notifyError } from "../notifications";
+import { dialogError } from "../notifications";
 
 function handleSearchInstance(
   type: "dev" | "prod",
@@ -25,7 +25,6 @@ function handleSearchInstance(
       break;
     default:
       throw new Error("Invalid type");
-      break;
   }
   const searchQueries: string[] = [];
 
@@ -66,29 +65,30 @@ function handleSearchInstance(
   ipcMain.once("resultChosenEvent", resultChosen);
 
   function onError(e: IpcMainEvent, error: string): void {
-    console.log("Error: ", error);
-
     search.sendContent("errorEventSearch", error);
-    notifyError(error);
+    dialogError(error);
   }
   ipcMain.once("errorEventSearch", onError);
 
   function closeSearchInstance(): void {
-    console.log("Closing search instance");
-
     ipcMain.removeListener("searchQuery", searchQuery);
     ipcMain.removeListener("errorEvent", onError);
     ipcMain.removeListener("searchResult", searchResult);
     ipcMain.removeListener("resultChosenEvent", resultChosen);
     ipcMain.removeListener("errorEventSearch", onError);
+    if (type === "dev") {
+      devWindow.detachDevTools();
+    }
     type === "dev"
       ? setTimeout(() => {
           devWindow.destroy();
-        }, 30000)
-      : instance.destroy();
+        }, 20000)
+      : setTimeout(() => {
+          instance.destroy();
+        }, 1000);
 
     if (type === "prod") {
-      captureEvent("Search closed in extension", {
+      captureEvent("Search extension closed", {
         id: id,
         queries: searchQueries,
       });

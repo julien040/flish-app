@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { join } from "path";
 
-import { BrowserWindow, screen, ipcMain } from "electron";
+import { BrowserWindow, screen, ipcMain, shell } from "electron";
 import { Instance } from "../internal/instance/types";
 import { extension } from "../internal/extension/types";
 import { getInstance } from "../internal/instance/read";
@@ -13,7 +13,7 @@ import {
 import { Session } from "./session";
 import { logConsoleMessage } from "../internal/extension/logging";
 import downloadHandler from "./download";
-import { notifyError } from "../internal/notifications";
+import { dialogError } from "../internal/notifications";
 
 export class InstanceWindow {
   public app: BrowserWindow;
@@ -33,14 +33,16 @@ export class InstanceWindow {
           this.ExtensionData = data.extension;
         })
         .catch((err) => {
-          notifyError("The profile does not exist");
+          dialogError("The profile does not exist");
           throw new Error(err);
         });
     }
   }
   private recreateApp() {
     const screenSize = screen.getPrimaryDisplay().size;
-
+    if (this.app != undefined) {
+      this.app.destroy();
+    }
     this.app = new BrowserWindow({
       webPreferences: {
         devTools: true,
@@ -53,11 +55,10 @@ export class InstanceWindow {
         ],
         partition: `persist:${this.InstanceData.instanceID}`,
       },
-      show:
+      show: !(
         this.ExtensionData.mode === "headless" ||
         this.ExtensionData.mode === "search"
-          ? false
-          : true,
+      ),
       autoHideMenuBar: true,
       width: 800,
       height: 600,
@@ -96,7 +97,7 @@ export class InstanceWindow {
    */
   async loadInstance(id: string): Promise<void> {
     const { extension, instance } = await getInstance(id).catch((err) => {
-      notifyError("This extension does not exist");
+      dialogError("This extension does not exist");
       throw new Error(err);
     });
     this.InstanceData = instance;
@@ -124,6 +125,13 @@ export class InstanceWindow {
         return permissionCheckHandler(permission, extension);
       }
     );
+    this.app.webContents.on("will-navigate", (e, url) => {
+      const link = new URL(url);
+      e.preventDefault();
+      if (link.protocol === "https:" || link.protocol === "http:") {
+        shell.openExternal(link.toString());
+      }
+    });
     //Avoid CORS issues (Source)[https://pratikpc.medium.com/bypassing-cors-with-electron-ab7eaf331605]
     this.app.webContents.session.webRequest.onBeforeSendHeaders(
       (details, callback) => {
@@ -133,7 +141,11 @@ export class InstanceWindow {
         }
 
         callback({
-          requestHeaders: { ...details.requestHeaders, Origin: "*" },
+          requestHeaders: {
+            ...details.requestHeaders,
+            Origin: "*",
+            "User-Agent": "curl/5.0",
+          },
         });
       }
     );
@@ -170,13 +182,13 @@ export class InstanceWindow {
       await this.app.webContents
         .loadFile(join(path, "index.html"))
         .catch(() => {
-          notifyError(
+          dialogError(
             "An error occured while loading the files of the extension"
           );
         });
     } else {
       await this.app.webContents.loadFile(join(path, entry)).catch(() => {
-        notifyError(
+        dialogError(
           "An error occured while loading the files of the extension"
         );
       });

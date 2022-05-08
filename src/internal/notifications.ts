@@ -1,8 +1,8 @@
 import { dialog } from "electron";
-import nativeImageIcon from "../internal/images";
+import nativeImageIcon from "./nativeImages";
 import { logMessage } from "./logging/logging";
 
-function notifyError(error: string): void {
+function dialogError(error: string): void {
   dialog.showMessageBox({
     message: "An error occured",
     title: "Check your logs",
@@ -13,4 +13,15 @@ function notifyError(error: string): void {
   logMessage("error", error);
 }
 
-export { notifyError };
+function dialogInfo(title: string, info: string): void {
+  dialog.showMessageBox({
+    message: "Information",
+    title: title,
+    detail: info,
+    type: "info",
+    icon: nativeImageIcon.info,
+  });
+  logMessage("info", info);
+}
+
+export { dialogError, dialogInfo };
