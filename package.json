@@ -9,7 +9,7 @@
     "lint": "eslint -c .eslintrc --ext .ts ./src",
     "start": "npm run build && electron ./dist/main.js",
     "electron": "electron ./dist/main.js",
-    "compile": "npm run build && electron-packager ."
+    "compile": "npm run build && electron-packager . --icons assets/Flish-Logo128.png --overwrite"
   },
   "repository": "https://github.com/julien040/flish",
   "keywords": [

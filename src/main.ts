@@ -80,7 +80,13 @@ app.on("ready", async () => {
       search
     );
   });
-  tray = new Tray(join(__dirname, "64x64.png"));
+  tray = new Tray(
+    join(
+      __dirname,
+      "/../assets/",
+      process.platform === "darwin" ? "Tray-macOS.png" : "Flish-Logo64.png" // To have a gray icon on macOS
+    )
+  );
   const shortcut = await getConfig("shortcut");
   const menu = Menu.buildFromTemplate([
     {
@@ -187,6 +193,12 @@ app.on("ready", async () => {
   tray.setContextMenu(menu);
   tray.on("click", () => search.show());
   globalShortcut.register(shortcut || "ALT+P", () => search.show());
+
+  if (process.platform === "darwin") {
+    app.dock.setIcon(join(__dirname, "/../assets/", "Flish-Logo512.png"));
+    app.dock.setMenu(menu);
+  }
+
   /*  
   Last element of process.argv is either a url or a file path.
   If it's a url, we need to open it in the corresponding window.
@@ -206,6 +218,12 @@ app.on("ready", async () => {
   } catch (error) {
     // Not a valid URL
   }
+});
+
+app.on("quit", () => {
+  tray.destroy();
+  globalShortcut.unregisterAll();
+  app.exit();
 });
 
 app.on("open-url", (e, url) => {
