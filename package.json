@@ -1,22 +1,51 @@
 {
   "name": "flish-app",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Flish, a search bar for power users",
   "productName": "Flish",
+  "build": {
+    "appId": "dev.flish.app",
+    "copyright": "Copyright (c) 2022 Julien CAGNIART",
+    "productName": "Flish",
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        {
+          "target": "default",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ]
+    },
+    "win": {
+      "target": [
+        {
+          "target": "default",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    }
+  },
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
     "lint": "eslint -c .eslintrc --ext .ts ./src",
-    "start": "npm run build && electron ./dist/main.js",
-    "electron": "electron ./dist/main.js",
-    "compile": "npm run build && electron-packager . --icons assets/Flish-Logo128.png --overwrite"
+    "start": "npm run build && electron ./out/main.js",
+    "electron": "electron ./out/main.js",
+    "compile": "npm run build && electron-packager . --icons assets/Flish-Logo128.png --overwrite",
+    "mac-build": "electron-builder build --mac",
+    "windows-build": "electron-builder build --win"
   },
-  "repository": "https://github.com/julien040/flish",
+  "repository": "https://github.com/julien040/flish-app",
   "keywords": [
     "electron",
     "flish"
   ],
-  "main": "./dist/main.js",
+  "main": "./out/main.js",
   "author": "Julien040",
   "license": "UNLICENSED",
   "devDependencies": {
@@ -24,6 +53,7 @@
     "@typescript-eslint/eslint-plugin": "^4.33.0",
     "@typescript-eslint/parser": "^4.33.0",
     "electron": "^18.2.0",
+    "electron-builder": "^23.0.3",
     "electron-packager": "^15.5.1",
     "eslint": "^7.32.0",
     "typescript": "^4.6.2"
@@ -34,6 +64,7 @@
     "axios": "^0.25.0",
     "electron-log": "^4.4.6",
     "electron-store": "^8.0.1",
+    "electron-updater": "^5.0.1",
     "keytar": "^7.9.0",
     "nanoid": "^3.3.1",
     "node-machine-id": "^1.1.12",

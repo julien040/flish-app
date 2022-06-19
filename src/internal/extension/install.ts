@@ -41,19 +41,26 @@ export const installExtension = async (
   } else {
     folderToExtract = path;
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  https.get(data.downloadURL, (res: any) => {
-    //Make an https request to the download url. The response should always be a zip file
-    callback("Downloading");
-    const extractor = res.pipe(unzipper.Extract({ path: folderToExtract })); //Transform the response into a stream and extract it in the folderToExtract. The unzipper module is used to extract the zip file. Using a stream is more efficient and clear than putting file into the memory.
-    extractor.on("finish", async () => {
-      //When the extraction is finished, we will set the config of the extension
-      await setConfig(`extensions.${uuid}`, { ...data, path: folderToExtract });
-      callback("Installed");
+  return new Promise<void>((resolve, reject) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    https.get(data.downloadURL, async (res: any) => {
+      //Make an https request to the download url. The response should always be a zip file
+      callback("Downloading");
+      try {
+        const extractor = res.pipe(unzipper.Extract({ path: folderToExtract })); //Transform the response into a stream and extract it in the folderToExtract. The unzipper module is used to extract the zip file. Using a stream is more efficient and clear than putting file into the memory.
+        await extractor.on("finish", async () => {
+          //When the extraction is finished, we will set the config of the extension
+          await setConfig(`extensions.${uuid}`, {
+            ...data,
+            path: folderToExtract,
+          });
+          captureEvent("Extension Installed", { extensionID: uuid });
+          callback("Installed");
+          resolve();
+        });
+      } catch (error) {
+        reject(error);
+      }
     });
-  });
-  captureEvent("Extension Installed", { extensionID: uuid });
-  await new Promise((resolve) => {
-    resolve("Installed");
   });
 };

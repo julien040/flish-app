@@ -38,7 +38,9 @@ export class ConfigurationWindow {
       return windowOpenHandle(data);
     });
   }
-
+  public destroy(): void {
+    this._window.destroy();
+  }
   public get window(): BrowserWindow {
     return this._window;
   }

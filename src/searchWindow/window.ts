@@ -36,12 +36,14 @@ export class searchWindow {
     this._window.webContents.setWindowOpenHandler((data) => {
       return windowOpenHandle(data);
     });
-    /*     this._window.webContents.openDevTools({ mode: "detach" }); */
   }
   public show(): void {
     captureEvent("Search bar opened");
     this._window.show();
     this._window.focus();
+  }
+  public destroy(): void {
+    this._window.destroy();
   }
   public hide(): void {
     this._window.hide();

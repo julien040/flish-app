@@ -10,6 +10,7 @@ import { onReady } from "./internal/analytics";
 import protocolHandler from "./internal/protocolHandler";
 import handleSearchInstance from "./internal/searchMode/main";
 import * as Sentry from "@sentry/electron";
+import { autoUpdater } from "electron-updater";
 
 let configurationWindow: ConfigurationWindow;
 let search: searchWindow;
@@ -18,7 +19,10 @@ const devModeWindow = new DevModeWindow();
 let tray: Tray;
 let searchHandler: unknown;
 
+autoUpdater.checkForUpdatesAndNotify();
+
 Sentry.init({ dsn: config.sentryDsn });
+
 /* 
 Avoid CORS issues when a POST Request is made using a JSON payload.
 When sending a post JSON, chrome will first send a preflight request to the server to check if the request is allowed.
@@ -92,20 +96,20 @@ app.on("ready", async () => {
     {
       label: "Search bar",
       type: "normal",
-      sublabel: "Open the spotlight like search bar",
+      /* sublabel: "Open the spotlight like search bar", */
       click: () => search.show(),
       accelerator: shortcut || "ALT+P",
     },
     {
       label: "Settings",
-      sublabel: "Configure extensions, bookmarks, etc.",
+      /* sublabel: "Configure extensions, bookmarks, etc.", */
       type: "normal",
       click: () => configurationWindow.show(),
     },
     {
       type: "separator",
     },
-    {
+    /* {
       label: "Current instance debugger",
       type: "submenu",
       submenu: [
@@ -126,7 +130,7 @@ app.on("ready", async () => {
           },
         },
       ],
-    },
+    }, */
     {
       label: "Developer mode",
       submenu: [
@@ -180,13 +184,9 @@ app.on("ready", async () => {
       type: "separator",
     },
     {
-      label: "Quit application",
+      label: "Quit",
       type: "normal",
-      click: () => {
-        tray.destroy();
-        globalShortcut.unregisterAll();
-        app.exit();
-      },
+      click: exitApp,
     },
   ]);
   tray.setToolTip("Flish");
@@ -197,6 +197,14 @@ app.on("ready", async () => {
   if (process.platform === "darwin") {
     app.dock.setIcon(join(__dirname, "/../assets/", "Flish-Logo512.png"));
     app.dock.setMenu(menu);
+    app.dock.hide();
+  }
+
+  if (process.env.NODE_ENV !== "development") {
+    app.setLoginItemSettings({
+      openAtLogin: true,
+      openAsHidden: true,
+    });
   }
 
   /*  
@@ -214,17 +222,28 @@ app.on("ready", async () => {
         search.show.bind(search),
         url.toString()
       );
-    }, 800);
+    }, 400);
   } catch (error) {
     // Not a valid URL
   }
 });
-
-app.on("quit", () => {
+function exitApp() {
   tray.destroy();
   globalShortcut.unregisterAll();
   app.exit();
+}
+
+app.on("quit", exitApp);
+
+app.on("will-quit", () => {
+  devModeWindow.destroy();
+  instanceWindow.destroy();
+  search.destroy();
+  configurationWindow.destroy();
+  exitApp();
 });
+
+app.on("before-quit", exitApp);
 
 app.on("open-url", (e, url) => {
   protocolHandler(configurationWindow.openURL, search.show.bind(search), url);
